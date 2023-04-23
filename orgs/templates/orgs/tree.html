@@ -1,8 +1,30 @@
 <!DOCTYPE html>
 <html>
-  <h1>MDI</h1>
-  <div id="tree-container"></div>
-  <h5>-</h5>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  
+  
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div id="tree-container" class="card">
+          <div class="card-header">
+            <h2 class="card-title">MDI</h2>
+          </div>
+          <div class="card-body">
+            <!-- Use Bootstrap icons for the tree nodes -->
+            <div id="jstree"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Use Bootstrap's dropdown menu to create a clean and dynamic contextual menu -->
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+    <li><a class="dropdown-item" href="#" onclick="createNode()">Create</a></li>
+    <li><a class="dropdown-item" href="#" onclick="renameNode()">Rename</a></li>
+    <li><a class="dropdown-item" href="#" onclick="deleteNode()">Delete</a></li>
+  </ul>
 
   <script>
   $(document).ready(function() {
@@ -12,17 +34,50 @@
       dataType: 'json',
       success: function(data) {
         //jstree config
-        console.log("test in jstree");
-        $('#tree-container').jstree({
+        $('#jstree').jstree({
           'plugins': ['contextmenu', 'wholerow', 'search', 'state'],//state
           core: {
             data: data,
             themes:{
-              icons: false
+              icons: true
             },
             
+          },
+          contextmenu: {
+            items: function(node) {
+              var items = {
+                "enter": {
+                  "label": "Query",
+                  "icon": 'bi bi-plus-square',
+                  "action": function() {
+                    enterNode(node);
+                  }
+                },
+                "rename": {
+                  "label": "Rename",
+                  "action": function() {
+                    renameNode(node);
+                  }
+                },
+                "create": {
+                  "label": "Create New",
+                  "icon": 'bi bi-plus-square',
+                  "action": function() {
+                    createNode(node);
+                  }
+                },
+                "delete": {
+                  "label": "Delete",
+                  "action": function() {
+                    deleteNode(node);
+                  }
+                }
+              };
+          
+              return items;
+            }
           }
-        }).on('select_node.jstree', function(e, data) { //get selected node 
+        })/*.on('select_node.jstree', function(e, data) { //get selected node 
           var node = data.instance.get_node(data.selected[0]);
 
           if(data.instance.is_leaf(node)) {
@@ -42,15 +97,6 @@
                 }
               });
           }
-        });
-        /*$('#tree-container').on('select_node.jstree', function(e, data) { //get selected node 
-          var node = data.instance.get_node(data.selected[0]);
-
-          if(data.instance.is_leaf(node)) {
-              //ajax request to Django view
-              var new_url = 'unit/' + node.id + '/';
-              window.location.href = new_url;
-          }
         });*/
 
       },
@@ -60,5 +106,28 @@
       }
     });
   });
+
+  function createNode(node) {
+    var newNode = {
+
+    }
+  }
+  function enterNode(node) {
+    console.log("Enter node");
+      var level = node.parents.length;
+
+      if(level == 1) {
+        console.log(" 1");
+      } else if (level == 2) {
+        console.log(" 2");
+      } else if (level == 3) {
+        console.log(" 3");
+      } else {
+        console.log(" 4");
+        window.location = '/unit/' + node.id + '/';
+        window.history.pushState("", "", "/unit/" + node.id + "/");
+        data.instance.deselect_node(node);
+      }
+  }
   </script>
 </html>
