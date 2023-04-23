@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, reverse
 from django.http import HttpResponse, JsonResponse
+from django.db.models import Count
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -242,6 +243,18 @@ def detailed_condition(request, report_id):
     context = {'report': report}
     return render(request, 'orgs/detailed_condition.html', context)
 
+def company_view(request):
+    return
+
+def function_view(request):
+    return
+
+def asset_view(request):
+    return
+
+def component_view(request):
+    return
+
 def unit(request, node_id):
     if request.method == 'POST':
         techID = request.POST['technology']
@@ -279,12 +292,21 @@ def unit(request, node_id):
 
     unit = Unit.objects.get(id=node_id)
     reports = safe_get(Report, unit=unit)
-    severeties = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
+    severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
     technology = Technology.objects.all()
     analysts = Analyst.objects.all()
     #severity = Severity.objects.all()
 
-    context = {'unit': unit, 'reports': reports, 'severities': severeties, 'technology': technology, 'analysts': analysts}
+    pie_data = [report.condition.severityLevel for report in reports]
+    pie_data = Counter(pie_data)
+    severity_labels = []
+    severity_data = []
+    for data in pie_data:
+        severity_labels.append(data)
+        temp = pie_data[data]
+        severity_data.append(temp)
+
+    context = {'unit': unit, 'reports': reports, 'severities': severities, 'technology': technology, 'analysts': analysts, 'severity_data': severity_data, 'severity_labels': severity_labels}
     return render(request, 'orgs/unit.html', context)
 
 

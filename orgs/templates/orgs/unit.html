@@ -22,6 +22,16 @@
 
     <h1>Condition Assessment Entries</h1>
 
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <br>
+
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add-issue-modal">
         Create Entry
     </button>
@@ -131,6 +141,40 @@
                 {% endfor %}
             </table>
         </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+          var severity_labels = {{ severity_labels|safe }};
+          var severity_data = {{ severity_data|safe }};
+          var backgroundColors = {
+            'LOW': 'cyan',
+            'MEDIUM': 'yellow',
+            'MED-HIGH': 'purple',
+            'HIGH': 'red',
+            'MISSED': 'grey',
+            'GOOD': 'green',
+          };
+          var backgroundColor = severity_labels.map(function(label){
+            return backgroundColors[label];
+          });
+          var ctx = document.getElementById('myChart').getContext('2d');
+          var myChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+              labels: severity_labels,
+              datasets: [{
+                label: '# of Reports',
+                data: severity_data,
+                backgroundColor: backgroundColor,
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              aspectRatio: 1.5
+            }
+          });
+        </script>
 {% endif %}
 
 {% else %}
