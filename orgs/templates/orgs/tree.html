@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <h1>MDI</h1>
+  <div id="tree-container"></div>
+  <h5>-</h5>
+
+  <script>
+  $(document).ready(function() {
+    $.ajax({
+      type: 'GET',
+      url: '/unit_tree_data/',
+      dataType: 'json',
+      success: function(data) {
+        //jstree config
+        console.log("test in jstree");
+        $('#tree-container').jstree({
+          'plugins': ['contextmenu', 'wholerow', 'search', 'state'],//state
+          core: {
+            data: data,
+            themes:{
+              icons: false
+            },
+            
+          }
+        }).on('select_node.jstree', function(e, data) { //get selected node 
+          var node = data.instance.get_node(data.selected[0]);
+
+          if(data.instance.is_leaf(node)) {
+            data.instance.deselect_node(node);
+            //data.instance.select_node(data.instance.get_parent(node));
+              //ajax request to Django view
+              $.ajax({
+                //url: '/unit/' + node.id + '/',
+                data: {
+                  'node_id': node.id
+                },
+                success: function(data) {
+                  //replaces current page content w/ HTML for new page
+                  window.location = '/unit/' + node.id + '/';
+                  window.history.pushState("", "", "/unit/" + node.id + "/");
+                  data.instance.deselect_node(node);
+                }
+              });
+          }
+        });
+        /*$('#tree-container').on('select_node.jstree', function(e, data) { //get selected node 
+          var node = data.instance.get_node(data.selected[0]);
+
+          if(data.instance.is_leaf(node)) {
+              //ajax request to Django view
+              var new_url = 'unit/' + node.id + '/';
+              window.location.href = new_url;
+          }
+        });*/
+
+      },
+      error: function() {
+        alert('Error Loading Hierarchy Tree. Go Home to Refresh');
+        $('#tree-container').jstree("refresh");
+      }
+    });
+  });
+  </script>
+</html>
