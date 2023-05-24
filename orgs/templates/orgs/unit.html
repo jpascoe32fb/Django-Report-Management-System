@@ -127,7 +127,7 @@
                   <th>Entry Date</th>
                   <th>Severity</th>
                   <th>Analyst</th>
-                  <th>pdf</th>
+                  <th>Report</th>
                   <th>Details</th>
                 </tr>
               </thead>
@@ -138,7 +138,7 @@
                       <td>{{report.condition.entry_date}}</td>
                       <td>{{report.condition.severityLevel}}</td>
                       <td>{{report.condition.analyst}}</td>
-                      <td><a class="btn btn-outline-danger" href="{% url 'generate_pdf' report_ids=report.id %}?format=pdf" target="_blank">pdf</a></td>
+                      <td><a class="btn btn-outline-danger" href="{% url 'generate_pdf' report_ids=report.id %}?format=pdf" target="_blank">Report</a></td>
                       <td><a class="btn btn-info" href="{% url 'detailed_condition' report.id %}" target="_blank">Details</a></td>
                     </tr>
                 {% endfor %}
@@ -147,7 +147,6 @@
         
           <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
           <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-          <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.bootstrap4.min.js"></script>
         <script>
           $(document).ready(function() {
             $('#entryTable').DataTable({

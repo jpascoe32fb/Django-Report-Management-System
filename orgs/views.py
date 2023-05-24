@@ -60,8 +60,8 @@ def get_unit_tree_data(request):
                                         if component_unit.plant_tag not in processed_plant_tags:
                                             processed_plant_tags.add(component_unit.plant_tag)
                                             #plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
-                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'id': asset_unit.id})
-                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'id': function_unit.asset.id})
+                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'cid': asset_unit.id})
+                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'aid': function_unit.asset.id})
                     function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name})
             unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name})
 
@@ -111,7 +111,7 @@ def generate_pdf(request, report_ids):
     p.showPage()
     p.drawString(x=0, y=0, text="General Statistics")
     sev_buffer = BytesIO()
-    severeties = [report.condition.severity for report in reports]
+    severeties = [report.condition.severityLevel for report in reports]
     severity_counts = Counter(severeties)
     # Create pie chart
     sev_labels = severity_counts.keys()
@@ -133,7 +133,7 @@ def generate_pdf(request, report_ids):
     col_widths_scaled = [width * scale_factor for width in col_widths]
     entry_data = [['Level', 'Unit', 'Function', 'Asset', 'Component']]
     for report in reports:
-        row = [report.condition.severity.name, report.unit.name.name, report.unit.function.name, report.unit.asset.name, report.unit.component.name]
+        row = [report.condition.severityLevel, report.unit.name.name, report.unit.function.name, report.unit.asset.name, report.unit.component.name]
         entry_data.append(row)
     entry_tables = Table(entry_data, colWidths=col_widths_scaled)
     table_style = TableStyle([
@@ -171,7 +171,7 @@ def generate_pdf(request, report_ids):
         #titles
         p.setFont(psfontname='Helvetica', size=14)
         p.drawString(x=45, y=795, text="Condition Entry Details")
-        p.drawString(x=330, y=795, text="Severity: " + report.condition.severity.name)
+        p.drawString(x=330, y=795, text="Severity: " + report.condition.severityLevel)
         p.setFont(psfontname='Helvetica-Bold', size=11)
         p.drawString(x=30, y=650, text="Faults")
         p.drawString(x=30, y=580, text="Comments")
@@ -271,12 +271,12 @@ def unit(request, node_id):
             tech = Technology.objects.get(name=techID)
         else:
             tech = Technology(name=techID)
-            #tech.save()
+            tech.save()
         if Analyst.objects.filter(name=analystID).exists():
             anal = Analyst.objects.get(name=analystID)
         else:
             anal = Analyst(name=analystID)
-            #anal.save()
+            anal.save()
         #if Severity.objects.filter(name=sevID).exists():
             #sev = Severity.objects.get(name=sevID)
         #else:
@@ -291,7 +291,6 @@ def unit(request, node_id):
         return redirect(reverse('unit', args=[node_id]))
 
     unit = Unit.objects.get(id=node_id)
-    sort_order = request.GET.get('sort', 'desc')
     reports = Report.objects.filter(unit=unit)
     severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
     technology = Technology.objects.all()
@@ -307,7 +306,7 @@ def unit(request, node_id):
         temp = pie_data[data]
         severity_data.append(temp)
 
-    context = {'unit': unit, 'reports': reports, 'severities': severities, 'technology': technology, 'analysts': analysts, 'severity_data': severity_data, 'severity_labels': severity_labels, 'sort_order': sort_order}
+    context = {'unit': unit, 'reports': reports, 'severities': severities, 'technology': technology, 'analysts': analysts, 'severity_data': severity_data, 'severity_labels': severity_labels}
     return render(request, 'orgs/unit.html', context)
 
 

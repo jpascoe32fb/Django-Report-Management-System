@@ -81,11 +81,14 @@ class Unit(models.Model):
 
 class Report(models.Model):
     condition = models.OneToOneField(Condition, null=True, on_delete=models.CASCADE)
-    unit = models.ForeignKey(Unit, null=True, on_delete=models.SET_NULL)
+    unit = models.ForeignKey(Unit, null=True, on_delete=models.CASCADE)
 
     fault = models.CharField(max_length=1000, null=True)
     comment = models.CharField(max_length=1000, null=True)
     recommendation = models.CharField(max_length=1000, null=True)
 
     def __str__(self): 
-        return f"{self.unit.name.name}  {self.condition.entry_date}"
+        try:
+            return f"{self.unit.name.name}  {self.condition.entry_date}"
+        except:
+            return f"Dead"

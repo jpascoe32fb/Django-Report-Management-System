@@ -3,6 +3,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.11/jstree.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css" />
 
   <div class="container-fluid">
     <div class="row">
@@ -129,6 +130,7 @@
   }
   function enterNode(node) {
     console.log("Enter node");
+    console.log(node);
       var level = node.parents.length;
 
       if(level == 1) {//company
@@ -137,13 +139,13 @@
         console.log(" 2");
       } else if (level == 3) {//asset
         console.log(" 3");
-        window.location = '/asset/' + node.id;
-        window.history.pushState("", "", "/asset/" + node.id);
+        window.location = '/asset/' + node.original.aid;
+        window.history.pushState("", "", "/asset/" + node.aid);
         //data.instance.deselect_node(node);
       } else {//component/unit
         console.log(" 4");
-        window.location = '/unit/' + node.id + '/?sort=desc';
-        window.history.pushState("", "", "/unit/" + node.id + "/?sort=desc");
+        window.location = '/unit/' + node.original.cid;
+        window.history.pushState("", "", "/unit/" + node.cid + "/?sort=desc");
         //data.instance.deselect_node(node);
       }
   }
