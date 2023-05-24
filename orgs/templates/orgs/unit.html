@@ -119,8 +119,9 @@
     <br>
     {% if reports %}
         <br>
-        <div class="card card-body">
-            <table class="table table-sm">
+        
+            <table id="entryTable" class="table table-sm">
+              <thead>
                 <tr>
                   <th>ID</th>
                   <th>Entry Date</th>
@@ -129,6 +130,8 @@
                   <th>pdf</th>
                   <th>Details</th>
                 </tr>
+              </thead>
+              <tbody>
                 {% for report in reports %}
                     <tr>
                       <td>{{report.id}}</td>
@@ -139,8 +142,32 @@
                       <td><a class="btn btn-info" href="{% url 'detailed_condition' report.id %}" target="_blank">Details</a></td>
                     </tr>
                 {% endfor %}
+              </tbody>
             </table>
-        </div>
+        
+          <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+          <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+          <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.bootstrap4.min.js"></script>
+        <script>
+          $(document).ready(function() {
+            $('#entryTable').DataTable({
+              //Pagination
+              "pagingType": "full_numbers",
+              columnDefs: [
+              {orderable: false, targets: 4},
+              {orderable: false, targets: 5}
+              ],
+
+              //Search
+              "searching": true,
+              "searchDelay": 500,
+              "search": {
+                "regex": true,
+                "smart": true
+              }
+            });
+          });
+        </script>
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>

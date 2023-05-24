@@ -61,7 +61,7 @@ def get_unit_tree_data(request):
                                             processed_plant_tags.add(component_unit.plant_tag)
                                             #plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
                                     component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'id': asset_unit.id})
-                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name})
+                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'id': function_unit.asset.id})
                     function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name})
             unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name})
 
@@ -249,11 +249,11 @@ def company_view(request):
 def function_view(request):
     return
 
-def asset_view(request):
-    return
+def asset_view(request, asset_id):
+    asset = Asset.objects.filter(id=asset_id)
 
-def component_view(request):
-    return
+    context = {'asset': asset}
+    return render(request, 'orgs/asset.html', context)
 
 def unit(request, node_id):
     if request.method == 'POST':
@@ -291,7 +291,8 @@ def unit(request, node_id):
         return redirect(reverse('unit', args=[node_id]))
 
     unit = Unit.objects.get(id=node_id)
-    reports = safe_get(Report, unit=unit)
+    sort_order = request.GET.get('sort', 'desc')
+    reports = Report.objects.filter(unit=unit)
     severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
     technology = Technology.objects.all()
     analysts = Analyst.objects.all()
@@ -306,7 +307,7 @@ def unit(request, node_id):
         temp = pie_data[data]
         severity_data.append(temp)
 
-    context = {'unit': unit, 'reports': reports, 'severities': severities, 'technology': technology, 'analysts': analysts, 'severity_data': severity_data, 'severity_labels': severity_labels}
+    context = {'unit': unit, 'reports': reports, 'severities': severities, 'technology': technology, 'analysts': analysts, 'severity_data': severity_data, 'severity_labels': severity_labels, 'sort_order': sort_order}
     return render(request, 'orgs/unit.html', context)
 
 

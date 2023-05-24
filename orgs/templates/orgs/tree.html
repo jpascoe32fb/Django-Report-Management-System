@@ -22,13 +22,6 @@
       </div>
     </div>
   </div>
-  
-  <!-- Use Bootstrap's dropdown menu to create a clean and dynamic contextual menu -->
-  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
-    <li><a class="dropdown-item" href="#" onclick="createNode()">Create</a></li>
-    <li><a class="dropdown-item" href="#" onclick="renameNode()">Rename</a></li>
-    <li><a class="dropdown-item" href="#" onclick="deleteNode()">Delete</a></li>
-  </ul>
 
   <script>
   $(document).ready(function() {
@@ -85,7 +78,17 @@
               return items;
             }
           }
-        })/*.on('select_node.jstree', function(e, data) { //get selected node 
+        });/*.on('ready.jstree', function() {
+          // Restore the expanded/collapsed state from local storage
+          var savedState = localStorage.getItem('jstree-state');
+          if(savedState) {
+            $('#jstree').jstree(true).set_state(JSON.parse(savedState));
+          }
+        }).on('changed.jstree', function(e, data) {
+          var currentState = $('#jstree').jstree(true).get_state();
+          localStorage.setItem('jstree-state', JSON.stringify(currentState));
+        });*/
+        /*.on('select_node.jstree', function(e, data) { //get selected node 
           var node = data.instance.get_node(data.selected[0]);
 
           if(data.instance.is_leaf(node)) {
@@ -128,25 +131,28 @@
     console.log("Enter node");
       var level = node.parents.length;
 
-      if(level == 1) {
+      if(level == 1) {//company
         console.log(" 1");
-      } else if (level == 2) {
+      } else if (level == 2) {//function
         console.log(" 2");
-      } else if (level == 3) {
+      } else if (level == 3) {//asset
         console.log(" 3");
-      } else {
+        window.location = '/asset/' + node.id;
+        window.history.pushState("", "", "/asset/" + node.id);
+        //data.instance.deselect_node(node);
+      } else {//component/unit
         console.log(" 4");
-        window.location = '/unit/' + node.id + '/';
-        window.history.pushState("", "", "/unit/" + node.id + "/");
-        data.instance.deselect_node(node);
+        window.location = '/unit/' + node.id + '/?sort=desc';
+        window.history.pushState("", "", "/unit/" + node.id + "/?sort=desc");
+        //data.instance.deselect_node(node);
       }
   }
-
+/*
   $(document).ready(function() {
     $('#tree-search-input').on('input', function() {
       var searchString = $(this).val();
       $('#tree-container').jstree("search", searchString);
     });
-  });
+  });*/
   </script>
 </html>
