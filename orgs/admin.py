@@ -15,3 +15,5 @@ admin.site.register(Function)
 admin.site.register(Asset)
 admin.site.register(Component)
 admin.site.register(PlantTag)
+
+admin.site.register(FaultGroup)

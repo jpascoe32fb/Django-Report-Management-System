@@ -32,6 +32,7 @@ class Condition(models.Model):
     technology = models.ForeignKey(Technology, null=True, on_delete=models.SET_NULL)
     analyst = models.ForeignKey(Analyst, null=True, on_delete=models.SET_NULL)
     entry_date = models.DateField(null=True)
+    closed = models.BooleanField(null=True, default=False)
     close_date = models.DateField(null=True, blank=True)
     work_req = models.CharField(max_length=300, null=True)
     work_order = models.CharField(max_length=300, null=True)
@@ -78,16 +79,24 @@ class Unit(models.Model):
     def __str__(self):
         return f"{self.name.name} {self.component}"
 
+class FaultGroup(models.Model):
+    fault = models.CharField(max_length=200, null=True, blank=True)
+    fault_group = models.CharField(max_length=200, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.fault}"
 
 class Report(models.Model):
+    id = models.AutoField(primary_key=True)
     condition = models.OneToOneField(Condition, null=True, on_delete=models.CASCADE)
     unit = models.ForeignKey(Unit, null=True, on_delete=models.CASCADE)
 
     fault = models.CharField(max_length=1000, null=True)
+    fault_group = models.ManyToManyField(FaultGroup, blank=True)
     comment = models.CharField(max_length=1000, null=True)
     recommendation = models.CharField(max_length=1000, null=True)
 
-    def __str__(self): 
+    def __str__(self):
         try:
             return f"{self.unit.name.name}  {self.condition.entry_date}"
         except:

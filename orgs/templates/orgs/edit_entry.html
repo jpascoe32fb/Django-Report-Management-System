@@ -1,0 +1,257 @@
+{% extends 'orgs/main.html' %}
+
+{% block content %}
+<a href="/unit/{{ unit_id }}" class="btn btn-outline-secondary btn-sm">&laquo; Back</a>
+
+    <!-- Create Report Form -->
+    <div class="card-body" id="add-issue-modal" tabindex="-1" role="dialog" aria-labelledby="add-issue-modal-label" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="add-issue-modal-label">Edit the Condition Assessment</h5>
+          </div>
+          <div class="modal-body">
+            <form method="POST" autocomplete="off" id="form-id">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="technology">Technology:</label>
+                <input class="form-control" id="technology" name="technology" value="{{ report[0].condition.technology.name }}" list=technologyList required>
+                <datalist id="technologyList">
+                  {% for tech in technology %}
+                    <option value="{{ tech.name }}">{{ tech.name }}</option>
+                  {% endfor %}
+                </datalist>
+              </input>
+              </div>
+              <div class="form-group">
+                <label for="analysts">Analyst:</label>
+                <input class="form-control" id="analysts" name="analysts" value="{{ report.condition.analyst.name }}"list=analystList required>
+                <datalist id="analystList">
+                  {% for analyst in analysts %}
+                    <option value="{{ analyst.name }}">{{ analyst.name }}</option>
+                  {% endfor %}
+                </datalist>
+              </input>
+              </div>
+              <div class="form-group">
+                <label for="severity">Severity:</label>
+                <div>
+                  <input class="form-select" id="severity" name="severity" list=severityList required>
+                </div>
+                <datalist id="severityList">
+                  {% for severity in severities %}
+                    <option value="{{ severity }}">{{ severity }}</option>
+                  {% endfor %}
+                </datalist>
+              </input>
+              </div>
+              <div class="form-group">
+                <label for="entryDate">Entry Date:</label>
+                <input class="form-control" id="entryDate" name="entryDate" type="date" required></input>
+              </div>
+              <div class="form-group">
+
+                <label for="faults">Faults: </label>
+                <button class="btn btn-danger" id="listFaults" data-toggle="modal" data-target="#faultModal" type="button"> +</button>
+
+                <!-- Secondary Modal -->
+                <div class="modal fade" id="faultModal" tabindex="-1" role="dialog" aria-labelledby="secondaryModalLabel" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="secondaryModalLabel">Secondary Modal</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <!-- List of existing faults or option to create a new one -->
+                        <table id="entryTable" class="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Fault</th>
+                              <th>Fault Group</th>
+                              <th>Select</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for faults in faults_list %}
+                                <tr>
+                                  <td>{{faults.fault}}</td>
+                                  <td>{{faults.fault_group}}</td>
+                                  <td><button data-fault="{{faults.fault}}" data-fault-group="{{faults.fault_group}}" class="select-fault-group-btn btn btn-danger" data-dismiss="modal">+</button>
+                                </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                        <br>
+                        <p>Create New Fault:</p>
+                        <div>Fault</div>
+                        <input class="form-control" id="newFault" placeholder="Enter new fault">
+                        <div>Fault Group</div>
+                        <input class="form-control" id="newFaultGroup" placeholder="Enter new fault group"></input>
+                      </div>
+                      <div class="modal-footer">
+                        <button data-fault="" data-fault-group="" class="select-fault-group-btn btn btn-primary" data-dismiss="modal">Create New</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <table class="table" id="faultTable" name="faultTable">
+                  <thead>
+                    <tr>
+                      <th>Fault</th>
+                      <th>Fault Group</th>
+                    </tr>
+                  </thead>
+                </table>
+
+                <script>
+                  // JavaScript to handle the button click event and pass the selected fault_group back to the original page
+                  var selectFaultGroupButtons = document.querySelectorAll('.select-fault-group-btn');
+                  selectFaultGroupButtons.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                      var fault = button.dataset.fault;
+                      var faultGroup = button.dataset.faultGroup;
+                      if(fault == "" && faultGroup == "") {
+                          fault = document.getElementById('newFault').value;
+                          faultGroup = document.getElementById('newFaultGroup').value;
+                      }
+
+                      // Pass the selected fault_group back to the original page
+                      // You can use AJAX or any other method to achieve this
+                      // Create a new row in the table with the selected fault and fault group
+                      var table = document.getElementById('faultTable');
+                      var newRow = table.insertRow();
+                      var faultCell = newRow.insertCell();
+                      var faultGroupCell = newRow.insertCell();
+                      faultCell.innerHTML = fault;
+                      faultGroupCell.innerHTML = faultGroup;
+                    });
+                  });
+                </script>
+
+              </div>
+              <div class="form-group">
+                <label for="recommendations">Recommendation(s):</label>
+                <textarea class="form-control" id="recommendations" name="recommendations"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="comments">Comments:</label>
+                <textarea class="form-control" id="comments" name="comments"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="linkedDocs">Linked Documents:</label>
+              </div>
+              <div class="form-group">
+                <label for="messages">Email SMS Details:</label>
+              </div>
+              <button type="submit" class="btn btn-primary" id="submitButton">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function() {
+        function getCookie(name) {
+          var cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+              var cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+              }
+            }
+          }
+          return cookieValue;
+        }
+
+        function handleSubmit(event) {
+          event.preventDefault();
+        
+          // Get the values from the input fields
+          var unit_id = {{ unit_id }};
+          var technology = $('#technology').val();
+          var analyst = $('#analysts').val();
+          var severity = $('#severity').val();
+          var entryDate = $('#entryDate').val();
+          var faultsTable = document.getElementById('faultTable');
+          var recommendation = $('#recommendations').val();
+          var comment = $('#comments').val();
+        
+          var rowLength = faultsTable.rows.length;
+          let faults = [];
+        
+          for (i = 1; i < rowLength; i++) {
+            var oCells = faultsTable.rows.item(i).cells;
+            var f = oCells.item(0).innerHTML;
+            var fg = oCells.item(1).innerHTML;
+            faults.push({
+              fault: f,
+              faultGroup: fg
+            });
+          }
+        
+          // Send the Ajax POST request
+          $.ajax({
+            url: '/create-entry/' + unit_id + '/',
+            type: 'POST',
+            data: {
+              'technology': technology,
+              'analysts': analyst,
+              'severity': severity,
+              'entryDate': entryDate,
+              'faults': JSON.stringify(faults),
+              'recommendation': recommendation,
+              'comment': comment,
+            },
+            dataType: 'json',
+            //contentType: 'application/json',
+            beforeSend: function(xhr, settings) {
+              // Retrieve the CSRF token from the cookie
+              var csrfToken = getCookie('csrftoken');
+              // Set the CSRF token in the request header
+              xhr.setRequestHeader('X-CSRFToken', csrfToken);
+            },
+            success: function(response) {
+              // Handle the response from the server
+              if (response.success) {
+                // Display success message or perform any other actions
+                window.location = '/unit/' + unit_id;
+                window.history.pushState("", "", "/unit/" + unit_id);
+              }
+            }
+          });
+        }
+        
+        var form = document.getElementById("form-id");
+        form.addEventListener("submit", handleSubmit);
+      });        
+  </script>
+
+    <script>
+      $(document).ready(function() {
+        $('#entryTable').DataTable({
+          //Pagination
+          "pagingType": "full_numbers",
+
+          //Search
+          "searching": true,
+          "searchDelay": 500,
+          "search": {
+            "regex": true,
+            "smart": true
+          }
+        });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+{% endblock content %}

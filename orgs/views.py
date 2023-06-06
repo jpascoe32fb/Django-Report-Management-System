@@ -12,6 +12,8 @@ from collections import Counter
 import matplotlib.pyplot as plt
 from io import BytesIO
 
+import json
+
 from .models import *
 
 #for safely returning instances from a model even if none exist | use model.objects.get for single instances
@@ -196,7 +198,7 @@ def generate_pdf(request, report_ids):
         p.drawString(x=50, y=690, text="Plant Tag:  None")
         #Fault Text
             #p.drawString(x=31, y=625, text=report.fault)
-        text = report.fault + " :test test test test test test test test test test"
+        text = " "#report.fault_group.all() + " :test test test test test test test test test test"
         if len(text) > 125:
             text = text[:120] + '\n' + text[120:]
             #if len(text) > 250: delete after 250 so it doesn't overrun the box
@@ -292,9 +294,7 @@ def unit(request, node_id):
 
     unit = Unit.objects.get(id=node_id)
     reports = Report.objects.filter(unit=unit)
-    severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
-    technology = Technology.objects.all()
-    analysts = Analyst.objects.all()
+    #severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
     #severity = Severity.objects.all()
 
     pie_data = [report.condition.severityLevel for report in reports]
@@ -306,10 +306,86 @@ def unit(request, node_id):
         temp = pie_data[data]
         severity_data.append(temp)
 
-    context = {'unit': unit, 'reports': reports, 'severities': severities, 'technology': technology, 'analysts': analysts, 'severity_data': severity_data, 'severity_labels': severity_labels}
+    context = {'unit': unit, 'reports': reports, 'severity_data': severity_data, 'severity_labels': severity_labels}
     return render(request, 'orgs/unit.html', context)
 
 
+def create_entry(request, node_id):
+    if request.method == 'POST':
+        techID = request.POST['technology']
+        analystID = request.POST['analysts']
+        sevID = request.POST['severity']
+        entry = request.POST['entryDate']
+        p_faultTable = request.POST['faults']
+        rec = request.POST['recommendation']
+        comm = request.POST['comment']
+
+        p_faults = json.loads(p_faultTable)
+
+        if Technology.objects.filter(name=techID).exists():
+            tech = Technology.objects.get(name=techID)
+        else:
+            tech = Technology(name=techID)
+            tech.save()
+        if Analyst.objects.filter(name=analystID).exists():
+            anal = Analyst.objects.get(name=analystID)
+        else:
+            anal = Analyst(name=analystID)
+            anal.save()
+        #if Severity.objects.filter(name=sevID).exists():
+            #sev = Severity.objects.get(name=sevID)
+        #else:
+            #sev = Severity(name=sevID)
+            #tech.save()
+        p_fault_list = []
+        for fault in p_faults:
+            if FaultGroup.objects.filter(fault=fault['fault'], fault_group=fault['faultGroup']):
+                p_fault_list.append(FaultGroup.objects.get(fault=fault['fault'], fault_group=fault['faultGroup']))
+            else:
+                p_new_fault = FaultGroup(fault=fault['fault'], fault_group=fault['faultGroup'])
+                p_fault_list.append(p_new_fault)
+                p_new_fault.save()
+        cond = Condition(severityLevel=sevID, technology=tech, analyst=anal, entry_date=entry)
+        cond.save()
+        unitObj = Unit.objects.get(id=node_id)
+        new_report = Report(condition=cond, unit=unitObj, comment=comm, recommendation=rec)
+        print(new_report)
+        new_report.save()
+        new_report.fault_group.set(p_fault_list)
+        print("\n")
+        print(new_report)
+        #new_report.save()
+
+        return redirect(reverse('unit', args=[node_id]))
+    
+    faults_list = FaultGroup.objects.all()
+
+    technologies = Technology.objects.all()
+    analysts = Analyst.objects.all()
+    severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
+
+    context = {'unit_id':node_id, 'severities':severities, 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list}    
+    return render(request, 'orgs/create_entry.html', context)
+
+def edit_entry(request, node_id, report_id):
+    if request.method == 'POST':
+        techID = request.POST['technology']
+        analystID = request.POST['analysts']
+        sevID = request.POST['severity']
+        entry = request.POST['entryDate']
+        p_faultTable = request.POST['faults']
+        rec = request.POST['recommendation']
+        comm = request.POST['comment']
+
+    report = Report.objects.filter(id=report_id)
+    print(report)
+    technologies = Technology.objects.all()
+    analysts = Analyst.objects.all()
+    severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
+    faults_list = FaultGroup.objects.all()
+
+    context = {'report':report, 'unit_id':node_id, 'severities':severities, 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list}
+    return render(request, 'orgs/edit_entry.html', context)
 
 def create_report(request, node_id):
     context = {}

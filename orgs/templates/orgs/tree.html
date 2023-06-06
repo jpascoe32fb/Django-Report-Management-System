@@ -79,37 +79,7 @@
               return items;
             }
           }
-        });/*.on('ready.jstree', function() {
-          // Restore the expanded/collapsed state from local storage
-          var savedState = localStorage.getItem('jstree-state');
-          if(savedState) {
-            $('#jstree').jstree(true).set_state(JSON.parse(savedState));
-          }
-        }).on('changed.jstree', function(e, data) {
-          var currentState = $('#jstree').jstree(true).get_state();
-          localStorage.setItem('jstree-state', JSON.stringify(currentState));
-        });*/
-        /*.on('select_node.jstree', function(e, data) { //get selected node 
-          var node = data.instance.get_node(data.selected[0]);
-
-          if(data.instance.is_leaf(node)) {
-            data.instance.deselect_node(node);
-            //data.instance.select_node(data.instance.get_parent(node));
-              //ajax request to Django view
-              $.ajax({
-                //url: '/unit/' + node.id + '/',
-                data: {
-                  'node_id': node.id
-                },
-                success: function(data) {
-                  //replaces current page content w/ HTML for new page
-                  window.location = '/unit/' + node.id + '/';
-                  window.history.pushState("", "", "/unit/" + node.id + "/");
-                  data.instance.deselect_node(node);
-                }
-              });
-          }
-        });*/
+        });
        /* $('.tree-search-input').on('input', function() {
           var searchString = $(this).val();
           $('#tree-container').jstree("search", searchString);
@@ -145,7 +115,7 @@
       } else {//component/unit
         console.log(" 4");
         window.location = '/unit/' + node.original.cid;
-        window.history.pushState("", "", "/unit/" + node.cid + "/?sort=desc");
+        window.history.pushState("", "", "/unit/" + node.cid);
         //data.instance.deselect_node(node);
       }
   }
