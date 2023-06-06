@@ -220,11 +220,9 @@
             },
             success: function(response) {
               // Handle the response from the server
-              if (response.success) {
                 // Display success message or perform any other actions
                 window.location = '/unit/' + unit_id;
                 window.history.pushState("", "", "/unit/" + unit_id);
-              }
             }
           });
         }

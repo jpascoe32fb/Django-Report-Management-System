@@ -340,7 +340,7 @@ def create_entry(request, node_id):
             #tech.save()
         p_fault_list = []
         for fault in p_faults:
-            if FaultGroup.objects.filter(fault=fault['fault'], fault_group=fault['faultGroup']):
+            if FaultGroup.objects.filter(fault=fault['fault'], fault_group=fault['faultGroup']).exists():
                 p_fault_list.append(FaultGroup.objects.get(fault=fault['fault'], fault_group=fault['faultGroup']))
             else:
                 p_new_fault = FaultGroup(fault=fault['fault'], fault_group=fault['faultGroup'])
@@ -350,14 +350,14 @@ def create_entry(request, node_id):
         cond.save()
         unitObj = Unit.objects.get(id=node_id)
         new_report = Report(condition=cond, unit=unitObj, comment=comm, recommendation=rec)
-        print(new_report)
+        #print(new_report)
         new_report.save()
         new_report.fault_group.set(p_fault_list)
-        print("\n")
-        print(new_report)
+        #print("\n")
+        #print(new_report)
         #new_report.save()
 
-        return redirect(reverse('unit', args=[node_id]))
+        return JsonResponse({"data": ""}, status=200)
     
     faults_list = FaultGroup.objects.all()
 
@@ -378,8 +378,12 @@ def edit_entry(request, node_id, report_id):
         rec = request.POST['recommendation']
         comm = request.POST['comment']
 
+        #print("in edit entry")
+        #print(reverse('unit', args=[node_id]))
+        return JsonResponse({"data": ""}, status=200)
+
     report = Report.objects.get(id=report_id)
-    print(report)
+    #print(report)
     technologies = Technology.objects.all()
     analysts = Analyst.objects.all()
     severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
