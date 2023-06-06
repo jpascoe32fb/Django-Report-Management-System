@@ -11,6 +11,7 @@ from reportlab.graphics.shapes import Rect
 from collections import Counter
 import matplotlib.pyplot as plt
 from io import BytesIO
+import datetime
 
 import json
 
@@ -377,14 +378,16 @@ def edit_entry(request, node_id, report_id):
         rec = request.POST['recommendation']
         comm = request.POST['comment']
 
-    report = Report.objects.filter(id=report_id)
+    report = Report.objects.get(id=report_id)
     print(report)
     technologies = Technology.objects.all()
     analysts = Analyst.objects.all()
     severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
     faults_list = FaultGroup.objects.all()
 
-    context = {'report':report, 'unit_id':node_id, 'severities':severities, 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list}
+    pre_entry_date = report.condition.entry_date.isoformat()
+
+    context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':node_id, 'severities':severities, 'analysts': analysts, 'technology': technologies, 'faults_list':list(faults_list.values())}
     return render(request, 'orgs/edit_entry.html', context)
 
 def create_report(request, node_id):
