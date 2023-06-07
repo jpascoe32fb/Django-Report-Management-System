@@ -15,7 +15,7 @@
               {% csrf_token %}
               <div class="form-group">
                 <label for="technology">Technology:</label>
-                <input class="form-control" id="technology" name="technology" value="{{ report[0].condition.technology.name }}" list=technologyList required>
+                <input class="form-control" id="technology" name="technology" value="{{ report.condition.technology.name }}" list=technologyList required>
                 <datalist id="technologyList">
                   {% for tech in technology %}
                     <option value="{{ tech.name }}">{{ tech.name }}</option>
@@ -36,7 +36,7 @@
               <div class="form-group">
                 <label for="severity">Severity:</label>
                 <div>
-                  <input class="form-select" id="severity" name="severity" list=severityList required>
+                  <input class="form-select" id="severity" name="severity" value="{{ report.condition.severityLevel }}" list=severityList required>
                 </div>
                 <datalist id="severityList">
                   {% for severity in severities %}
@@ -47,7 +47,7 @@
               </div>
               <div class="form-group">
                 <label for="entryDate">Entry Date:</label>
-                <input class="form-control" id="entryDate" name="entryDate" type="date" required></input>
+                <input class="form-control" id="entryDate" name="entryDate" type="date" value="{{ entry_date }}" required></input>
               </div>
               <div class="form-group">
 
@@ -59,7 +59,7 @@
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h5 class="modal-title" id="secondaryModalLabel">Secondary Modal</h5>
+                        <h5 class="modal-title" id="secondaryModalLabel">Fault Selection</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                           <span aria-hidden="true">&times;</span>
                         </button>
@@ -135,11 +135,11 @@
               </div>
               <div class="form-group">
                 <label for="recommendations">Recommendation(s):</label>
-                <textarea class="form-control" id="recommendations" name="recommendations"></textarea>
+                <textarea class="form-control" id="recommendations" name="recommendations">{{ report.recommendation }}</textarea>
               </div>
               <div class="form-group">
                 <label for="comments">Comments:</label>
-                <textarea class="form-control" id="comments" name="comments"></textarea>
+                <textarea class="form-control" id="comments" name="comments">{{ report.comment }}</textarea>
               </div>
               <div class="form-group">
                 <label for="linkedDocs">Linked Documents:</label>
@@ -153,6 +153,21 @@
         </div>
       </div>
     </div>
+
+    <script>
+        function on_load() {
+            var table = document.getElementById('faultTable');
+            var pre_faults = {{ faults_list|safe }};
+            for(var i = 0; i < pre_faults.length; i++) {
+                var newRow = table.insertRow();
+                var faultCell = newRow.insertCell();
+                var faultGroupCell = newRow.insertCell();
+                faultCell.innerHTML = pre_faults[i]['fault'];
+                faultGroupCell.innerHTML = pre_faults[i]['fault_group'];
+            }
+        }
+        on_load();
+    </script>
 
     <script>
       $(document).ready(function() {
@@ -176,6 +191,7 @@
         
           // Get the values from the input fields
           var unit_id = {{ unit_id }};
+          var report_id = {{ report.id }};
           var technology = $('#technology').val();
           var analyst = $('#analysts').val();
           var severity = $('#severity').val();
@@ -199,7 +215,7 @@
         
           // Send the Ajax POST request
           $.ajax({
-            url: '/create-entry/' + unit_id + '/',
+            url: '/edit-entry/' + unit_id + '/' + report_id + '/',
             type: 'POST',
             data: {
               'technology': technology,
@@ -220,11 +236,14 @@
             },
             success: function(response) {
               // Handle the response from the server
-              if (response.success) {
-                // Display success message or perform any other actions
-                window.location = '/unit/' + unit_id;
-                window.history.pushState("", "", "/unit/" + unit_id);
-              }
+              //console.log("In ajax, success");
+              window.location = '/unit/' + unit_id;
+              window.history.pushState("", "", "/unit/" + unit_id);
+              //alert("Entry has been updated!");
+            },
+            error: function(response) {
+                alert("Error in updating entry!")
+                console.log("error in edit entry");
             }
           });
         }

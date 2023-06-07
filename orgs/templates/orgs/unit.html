@@ -51,7 +51,7 @@
                   <th>Entry Date</th>
                   <th>Severity</th>
                   <th>Analyst</th>
-                  <th>Options</th>
+                  <th>PDF</th>
                   <th>Details</th>
                   <th>Edit</th>
                 </tr>
@@ -63,7 +63,7 @@
                       <td>{{report.condition.entry_date}}</td>
                       <td>{{report.condition.severityLevel}}</td>
                       <td>{{report.condition.analyst}}</td>
-                      <td><a class="btn btn-outline-danger" href="{% url 'generate_pdf' report_ids=report.id %}?format=pdf" target="_blank">Report</a></td>
+                      <td><a class="btn btn-outline-danger" href="{% url 'generate_pdf' report_ids=report.id %}?format=pdf" target="_blank">PDF</a></td>
                       <td><a class="btn btn-info" href="{% url 'detailed_condition' report.id %}" target="_blank">Details</a></td>
                       <td><a class="btn btn-outline-warning" href="{% url 'edit_entry' node_id=unit.id report_id=report.id %}">Edit</a></td>
                     </tr>
