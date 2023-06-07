@@ -103,6 +103,7 @@
                     <tr>
                       <th>Fault</th>
                       <th>Fault Group</th>
+                      <th>-</th>
                     </tr>
                   </thead>
                 </table>
@@ -126,8 +127,10 @@
                       var newRow = table.insertRow();
                       var faultCell = newRow.insertCell();
                       var faultGroupCell = newRow.insertCell();
+                      var clear = newRow.insertCell();
                       faultCell.innerHTML = fault;
                       faultGroupCell.innerHTML = faultGroup;
+                      clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='remove(this)'>X</button>";
                     });
                   });
                 </script>
@@ -157,19 +160,25 @@
     <script>
         function on_load() {
             var table = document.getElementById('faultTable');
-            var pre_faults = {{ faults_list|safe }};
+            var pre_faults = {{ pre_faults_list|safe }};
             for(var i = 0; i < pre_faults.length; i++) {
                 var newRow = table.insertRow();
                 var faultCell = newRow.insertCell();
                 var faultGroupCell = newRow.insertCell();
+                var clear = newRow.insertCell();
                 faultCell.innerHTML = pre_faults[i]['fault'];
                 faultGroupCell.innerHTML = pre_faults[i]['fault_group'];
+                clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='remove(this)'>X</button>";
             }
+        }
+        function remove(row) {
+            row.parentNode.parentNode.remove();
         }
         on_load();
     </script>
 
     <script>
+
       $(document).ready(function() {
         function getCookie(name) {
           var cookieValue = null;
@@ -225,6 +234,7 @@
               'faults': JSON.stringify(faults),
               'recommendation': recommendation,
               'comment': comment,
+              'report_id': report_id,
             },
             dataType: 'json',
             //contentType: 'application/json',
@@ -270,7 +280,6 @@
       });
     </script>
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
 
 {% endblock content %}

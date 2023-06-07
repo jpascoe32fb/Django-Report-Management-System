@@ -15,6 +15,7 @@ urlpatterns = [
     path('detailed-condition/<int:report_id>/', views.detailed_condition, name='detailed_condition'),
     path('create-entry/<int:node_id>/', views.create_entry, name='create_entry'),
     path('edit-entry/<int:node_id>/<int:report_id>/', views.edit_entry, name='edit_entry'),
+    path('rename/<int:node_id>/', views.rename_node, name='rename'),
     path('about/', views.about),
     path('report/', views.report),
 ]

@@ -38,12 +38,13 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/jstree.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css" />
+
+        
         
     </head>
-    <body>
-        <tree>{% include 'orgs/tree.html' %}</tree>
+    <body>       
         <nav>{% include 'orgs/nav.html' %}</nav>
-
+        
         <main>
             <div class='container-fluid' id='main-content'>
                 {% block content %}
@@ -53,6 +54,10 @@
             <hr>
             <h5>MDI Report Writer</h5>
         </main>
+        <tree>{% include 'orgs/tree.html' %}</tree>
+        
     </body>
-
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 </html>

@@ -1,9 +1,40 @@
 <!DOCTYPE html>
 <html>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.11/jstree.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css" />
+  <head>
+    <style>
+      #renameModal {
+        z-index: 9999;
+        
+      }
+      .modal-backdrop.show {
+        z-index: 1050;
+      }
+    </style>
+  </head>
+
+  <div class="modal fade" id="renameModal" tabindex="-1" role="dialog" aria-labelledby="renameModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="renameModalLabel">Rename Node</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" id="renameForm">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="newNameInput">New Name</label>
+              <input type="text" class="form-control" id="newNameInput" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 
   <div class="container-fluid">
     <div class="row">
@@ -93,13 +124,29 @@
     });
   });
 
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
   function createNode(node) {
     var newNode = {
 
     }
   }
+
   function enterNode(node) {
-    console.log("Enter node");
+    //console.log("Enter node");
     console.log(node);
       var level = node.parents.length;
 
@@ -109,16 +156,62 @@
         console.log(" 2");
       } else if (level == 3) {//asset
         console.log(" 3");
-        window.location = '/asset/' + node.original.aid;
-        window.history.pushState("", "", "/asset/" + node.aid);
+        window.location = '/asset/' + node.original.faid;
+        window.history.pushState("", "", "/asset/" + node.faid);
         //data.instance.deselect_node(node);
       } else {//component/unit
-        console.log(" 4");
-        window.location = '/unit/' + node.original.cid;
-        window.history.pushState("", "", "/unit/" + node.cid);
+        console.log(level);
+        window.location = '/unit/' + node.original.faid;
+        window.history.pushState("", "", "/unit/" + node.faid);
         //data.instance.deselect_node(node);
       }
   }
+
+  function renameNode(node) {
+    var level = node.parents.length;
+  
+    // Open the Bootstrap modal for renaming
+    $('#renameModal').modal('show');
+  
+    // Handle form submission
+    $('#renameForm').on('submit', function(event) {
+      event.preventDefault();
+      var newName = $('#newNameInput').val();
+  
+      // Send the Ajax POST request to update the node name
+      $.ajax({
+        url: '/rename/' + node.original.faid + '/',
+        type: 'POST',
+        data: {
+          'new_name': newName,
+          'level': level,
+      
+        },
+        dataType: 'json',
+        beforeSend: function(xhr, settings) {
+          // Retrieve the CSRF token from the cookie
+          var csrfToken = getCookie('csrftoken');
+          // Set the CSRF token in the request header
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        },
+        success: function(response) {
+          // Handle the response from the server
+          // Close the Bootstrap modal
+          $('#renameModal').modal('hide');
+          $('#newNameInput').val('');
+          // Update the jstree node name
+          window.location.reload();
+          
+        },
+        error: function(response) {
+          // Handle the error response
+          // Show an error message or perform any other necessary actions
+          alert("Error Renaming Node!")
+        }
+      });
+    });
+  }
+  
 /*
   $(document).ready(function() {
     $('#tree-search-input').on('input', function() {
@@ -127,4 +220,23 @@
     });
   });*/
   </script>
+  <script>
+    /*$('#renameModal').on('shown.bs.modal', function() {
+        // Push the modal-backdrop element behind the modal
+        //$('.modal-backdrop').css('z-index', '1050'); // Set a value lower than the modal's z-index
+        //$('#renameModal').css('z-index', '1055');
+        console.log("renameModal called");
+        var backdrop = document.createElement('div');
+        backdrop.classList.add('modal-backdrop');
+        backdrop.classList.add('fade');
+        backdrop.classList.add('show');
+        document.body.appendChild(backdrop);
+        
+      });*/
+</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.11/jstree.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </html>

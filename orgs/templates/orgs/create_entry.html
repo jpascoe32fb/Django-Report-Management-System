@@ -103,6 +103,7 @@
                     <tr>
                       <th>Fault</th>
                       <th>Fault Group</th>
+                      <th>-</th>
                     </tr>
                   </thead>
                 </table>
@@ -126,8 +127,10 @@
                       var newRow = table.insertRow();
                       var faultCell = newRow.insertCell();
                       var faultGroupCell = newRow.insertCell();
+                      var clear = newRow.insertCell();
                       faultCell.innerHTML = fault;
                       faultGroupCell.innerHTML = faultGroup;
+                      clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='remove(this)'>X</button>";
                     });
                   });
                 </script>
@@ -153,6 +156,12 @@
         </div>
       </div>
     </div>
+
+    <script>
+      function remove(row) {
+        row.parentNode.parentNode.remove();
+      }
+    </script>
 
     <script>
       $(document).ready(function() {

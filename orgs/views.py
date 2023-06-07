@@ -63,10 +63,10 @@ def get_unit_tree_data(request):
                                         if component_unit.plant_tag not in processed_plant_tags:
                                             processed_plant_tags.add(component_unit.plant_tag)
                                             #plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
-                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'cid': asset_unit.id})
-                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'aid': function_unit.asset.id})
-                    function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name})
-            unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name})
+                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.component.id})
+                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id})
+                    function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id})
+            unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name, 'faid': unit.name.id})
 
     return JsonResponse(unit_data, safe=False)
 
@@ -333,11 +333,6 @@ def create_entry(request, node_id):
         else:
             anal = Analyst(name=analystID)
             anal.save()
-        #if Severity.objects.filter(name=sevID).exists():
-            #sev = Severity.objects.get(name=sevID)
-        #else:
-            #sev = Severity(name=sevID)
-            #tech.save()
         p_fault_list = []
         for fault in p_faults:
             if FaultGroup.objects.filter(fault=fault['fault'], fault_group=fault['faultGroup']).exists():
@@ -350,12 +345,9 @@ def create_entry(request, node_id):
         cond.save()
         unitObj = Unit.objects.get(id=node_id)
         new_report = Report(condition=cond, unit=unitObj, comment=comm, recommendation=rec)
-        #print(new_report)
+        
         new_report.save()
         new_report.fault_group.set(p_fault_list)
-        #print("\n")
-        #print(new_report)
-        #new_report.save()
 
         return JsonResponse({"data": ""}, status=200)
     
@@ -365,7 +357,8 @@ def create_entry(request, node_id):
     analysts = Analyst.objects.all()
     severities = {'GOOD','MISSED','LOW', 'MEDIUM','HIGH','MED-HIGH'}
 
-    context = {'unit_id':node_id, 'severities':severities, 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list}    
+    context = {'unit_id':node_id, 'severities':severities, 'analysts': analysts, 'technology': technologies,
+                'faults_list':faults_list}    
     return render(request, 'orgs/create_entry.html', context)
 
 def edit_entry(request, node_id, report_id):
@@ -377,9 +370,46 @@ def edit_entry(request, node_id, report_id):
         p_faultTable = request.POST['faults']
         rec = request.POST['recommendation']
         comm = request.POST['comment']
+        p_report_id = request.POST['report_id']
 
-        #print("in edit entry")
-        #print(reverse('unit', args=[node_id]))
+        p_faults = json.loads(p_faultTable)
+
+        if Technology.objects.filter(name=techID).exists():
+            tech = Technology.objects.get(name=techID)
+        else:
+            tech = Technology(name=techID)
+            tech.save()
+        if Analyst.objects.filter(name=analystID).exists():
+            anal = Analyst.objects.get(name=analystID)
+        else:
+            anal = Analyst(name=analystID)
+            anal.save()
+        p_fault_list = []
+        for fault in p_faults:
+            if FaultGroup.objects.filter(fault=fault['fault'], fault_group=fault['faultGroup']).exists():
+                p_fault_list.append(FaultGroup.objects.get(fault=fault['fault'], fault_group=fault['faultGroup']))
+            else:
+                p_new_fault = FaultGroup(fault=fault['fault'], fault_group=fault['faultGroup'])
+                p_fault_list.append(p_new_fault)
+                p_new_fault.save()
+
+        p_report = Report.objects.filter(id=p_report_id)
+        for report in p_report: # this is because .get does not sync threads so have to use filter/for
+            condition = Condition.objects.get(id=report.condition.id)
+            condition.technology = tech
+            condition.severityLevel = sevID
+            condition.analyst = anal
+            condition.entry_date = entry
+            condition.save()
+
+            report.comment = comm
+            report.recommendation = rec
+            report.save()
+            report.fault_group.set(p_fault_list)
+        #bre
+        
+        #print(p_report.condition.severityLevel)
+
         return JsonResponse({"data": ""}, status=200)
 
     report = Report.objects.get(id=report_id)
@@ -390,9 +420,42 @@ def edit_entry(request, node_id, report_id):
     faults_list = FaultGroup.objects.all()
 
     pre_entry_date = report.condition.entry_date.isoformat()
+    pre_faults_list = report.fault_group
 
-    context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':node_id, 'severities':severities, 'analysts': analysts, 'technology': technologies, 'faults_list':list(faults_list.values())}
+    context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':node_id, 'severities':severities,
+                'analysts': analysts, 'technology': technologies, 'faults_list':faults_list,
+                'pre_faults_list':list(pre_faults_list.values())}
     return render(request, 'orgs/edit_entry.html', context)
+
+def rename_node(request, node_id):
+    if request.method == 'POST':
+        level = request.POST['level']
+        newName = request.POST['new_name']
+
+        if(level == "1"):
+            #Company
+            unit = Unit.objects.get(id=node_id)
+            unit.name.name = newName
+            unit.save()
+        elif (level == "2"):
+            #Function
+            function = Function.objects.get(id=node_id)
+            function.name = newName
+            function.save()
+        elif (level == "3"):
+            #Asset
+            asset = Asset.objects.get(id=node_id)
+            asset.name = newName
+            asset.save()
+        elif (level == "4"):
+            #Component
+            component = Component.objects.get(id=node_id)
+            component.name = newName
+            component.save()
+
+        return JsonResponse({"data": ""}, status=200)
+    
+    return JsonResponse({"data": ""}, status=400)
 
 def create_report(request, node_id):
     context = {}
