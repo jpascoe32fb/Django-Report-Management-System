@@ -144,6 +144,17 @@
                 <label for="comments">Comments:</label>
                 <textarea class="form-control" id="comments" name="comments">{{ report.comment }}</textarea>
               </div>
+              <div class="form-check">
+                {% if report.condition.closed %}
+                  <input class="form-check-input" type="checkbox" id="closedCheck" checked>
+                {% else %}
+                  <input class="form-check-input" type="checkbox" id="closedCheck">
+                {% endif %}
+                <!--input class="form-check-input" type="checkbox"  id="closedCheck"-->
+                <label class="form-check-label" for="closedCheck">
+                  Closed?
+                </label>
+              </div>
               <div class="form-group">
                 <label for="linkedDocs">Linked Documents:</label>
               </div>
@@ -208,6 +219,7 @@
           var faultsTable = document.getElementById('faultTable');
           var recommendation = $('#recommendations').val();
           var comment = $('#comments').val();
+          var closed = $('#closedCheck').is(':checked');
         
           var rowLength = faultsTable.rows.length;
           let faults = [];
@@ -235,6 +247,7 @@
               'recommendation': recommendation,
               'comment': comment,
               'report_id': report_id,
+              'closed':closed,
             },
             dataType: 'json',
             //contentType: 'application/json',
@@ -268,6 +281,9 @@
         $('#entryTable').DataTable({
           //Pagination
           "pagingType": "full_numbers",
+
+          //initial ordering
+          order: [[0, 'desc']],
 
           //Search
           "searching": true,

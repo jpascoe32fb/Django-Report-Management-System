@@ -48,6 +48,7 @@
               <thead>
                 <tr>
                   <th>ID</th>
+                  <th>Closed</th>
                   <th>Entry Date</th>
                   <th>Severity</th>
                   <th>Analyst</th>
@@ -60,6 +61,11 @@
                 {% for report in reports %}
                     <tr>
                       <td>{{report.id}}</td>
+                      {% if report.condition.closed %}
+                        <td><input class="form-check-input" type="checkbox" checked disabled></td>
+                      {% else %}
+                        <td><input class="form-check-input" type="checkbox"  disabled></td>
+                      {% endif %}     
                       <td>{{report.condition.entry_date}}</td>
                       <td>{{report.condition.severityLevel}}</td>
                       <td>{{report.condition.analyst}}</td>

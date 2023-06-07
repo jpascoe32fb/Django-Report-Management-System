@@ -307,7 +307,8 @@ def unit(request, node_id):
         temp = pie_data[data]
         severity_data.append(temp)
 
-    context = {'unit': unit, 'reports': reports, 'severity_data': severity_data, 'severity_labels': severity_labels}
+    context = {'unit': unit, 'reports': reports, 'severity_data': severity_data,
+                'severity_labels': severity_labels}
     return render(request, 'orgs/unit.html', context)
 
 
@@ -371,6 +372,11 @@ def edit_entry(request, node_id, report_id):
         rec = request.POST['recommendation']
         comm = request.POST['comment']
         p_report_id = request.POST['report_id']
+        p_closed = request.POST['closed']
+
+        closed = False
+        if p_closed == "true":
+            closed = True
 
         p_faults = json.loads(p_faultTable)
 
@@ -400,6 +406,7 @@ def edit_entry(request, node_id, report_id):
             condition.severityLevel = sevID
             condition.analyst = anal
             condition.entry_date = entry
+            condition.closed = closed
             condition.save()
 
             report.comment = comm
@@ -421,6 +428,7 @@ def edit_entry(request, node_id, report_id):
 
     pre_entry_date = report.condition.entry_date.isoformat()
     pre_faults_list = report.fault_group
+
 
     context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':node_id, 'severities':severities,
                 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list,
