@@ -72,7 +72,7 @@ class Unit(models.Model):
     name = models.ForeignKey(UnitName, null=True, on_delete=models.SET_NULL)
     function = models.ForeignKey(Function, null=True, on_delete=models.SET_NULL)
     asset = models.ForeignKey(Asset, null=True, on_delete=models.SET_NULL)
-    component = models.ForeignKey(Component, null=True, on_delete=models.SET_NULL)
+    component = models.OneToOneField(Component, null=True, on_delete=models.SET_NULL)
     plant_tag = models.ForeignKey(PlantTag, null=True, on_delete=models.SET_NULL)
     #report = models.ForeignKey(Report, null=True, on_delete=models.SET_NULL)
     

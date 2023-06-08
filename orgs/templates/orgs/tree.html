@@ -145,7 +145,9 @@
         console.log(" 2");
       } else if (level == 3) {//asset
         console.log(" 3");
-        window.location = '/asset/' + node.original.faid;
+        var node_id = 0;
+        if(node.original.comps) {node_id = node.original.comps[0].faid}
+        window.location = '/asset/' + node.original.faid + '/' + node_id;
         window.history.pushState("", "", "/asset/" + node.original.faid);
         //data.instance.deselect_node(node);
       } else {//component/unit

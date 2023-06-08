@@ -27,7 +27,7 @@ def safe_get(model, **kwargs):
         return None
 
 def get_unit_tree_data(request):
-    units = Unit.objects.all()
+    units = UnitName.objects.all()
     unit_data = []
     processed_names = set()
     processed_functions = set()
@@ -38,25 +38,25 @@ def get_unit_tree_data(request):
     for unit in units:
         if unit.name not in processed_names:
             processed_names.add(unit.name)
-            name_units = Unit.objects.filter(name=unit.name)
+            name_units = Unit.objects.filter(name=unit)
             function_data = []
             processed_functions = set()
             for name_unit in name_units:
                 if name_unit.function not in processed_functions:
                     processed_functions.add(name_unit.function)
-                    function_units = Unit.objects.filter(name=unit.name, function=name_unit.function)
+                    function_units = Unit.objects.filter(name=unit, function=name_unit.function)
                     asset_data = []
                     processed_assets = set()
                     for function_unit in function_units:
                         if function_unit.asset not in processed_assets:
                             processed_assets.add(function_unit.asset)
-                            asset_units = Unit.objects.filter(name=unit.name, function=name_unit.function, asset=function_unit.asset)
+                            asset_units = Unit.objects.filter(name=unit, function=name_unit.function, asset=function_unit.asset)
                             component_data = []
                             processed_components = set()
                             for asset_unit in asset_units:
                                 if asset_unit.component not in processed_components:
                                     processed_components.add(asset_unit.component)
-                                    component_units = Unit.objects.filter(name=unit.name, function=name_unit.function, asset=function_unit.asset, component=asset_unit.component)
+                                    component_units = Unit.objects.filter(name=unit, function=name_unit.function, asset=function_unit.asset, component=asset_unit.component)
                                     plant_tag_data = []
                                     processed_plant_tags = set()
                                     for component_unit in component_units:
@@ -64,11 +64,86 @@ def get_unit_tree_data(request):
                                             processed_plant_tags.add(component_unit.plant_tag)
                                             #plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
                                     component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.component.id})
-                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id})
+                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id, 'comps':component_data})
                     function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id})
-            unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name, 'faid': unit.name.id})
+            unit_data.append({'name': unit.name, 'children': function_data, 'text': unit.name, 'faid': unit.id})
 
     return JsonResponse(unit_data, safe=False)
+
+def get_unit_tree_data2(request):
+    unit_data = []
+
+    # Get all distinct unit names
+    unit_names = UnitName.objects.all()
+
+    for unit_name in unit_names:
+        name_units = Unit.objects.filter(name=unit_name).select_related('function')
+
+        name_data = []
+        for name_unit in name_units:
+            function_units = Unit.objects.filter(name=unit_name, function=name_unit.function).select_related('asset')
+
+            function_data = []
+            asset_map = {}
+
+            for function_unit in function_units:
+                asset_units = Unit.objects.filter(name=unit_name, function=name_unit.function, asset=function_unit.asset).select_related('component')
+
+                for asset_unit in asset_units:
+                    component_units = Unit.objects.filter(name=unit_name, function=name_unit.function, asset=function_unit.asset, component=asset_unit.component)
+
+                    for component_unit in component_units:
+                        plant_tag_data = []
+
+                        # Query the related plant tags here if needed
+                        # plant_tags = PlantTag.objects.filter(component=component_unit.component)
+                        # for plant_tag in plant_tags:
+                        #     plant_tag_data.append({'name': plant_tag.name, 'text': plant_tag.name})
+
+                        component_name = component_unit.component.name
+                        component_id = component_unit.component.id
+
+                        # Create the component data if it doesn't exist in the asset map
+                        if component_name not in asset_map:
+                            asset_map[component_name] = {
+                                'name': component_name,
+                                'children': plant_tag_data,
+                                'text': component_name,
+                                'faid': component_id
+                            }
+                        else:
+                            # Add plant tags to the existing component data
+                            asset_map[component_name]['children'].extend(plant_tag_data)
+
+                    # Add the component data to the asset data
+                    asset_data = list(asset_map.values())
+
+                # Create the asset data for the function
+                asset_name = function_unit.asset.name
+                asset_id = function_unit.asset.id
+                asset_entry = {'name': asset_name, 'children': asset_data, 'text': asset_name, 'faid': asset_id}
+
+                # Add the asset data to the function data
+                function_data.append(asset_entry)
+
+            # Create the function data for the unit
+            function_name = name_unit.function.name
+            function_id = name_unit.function.id
+            function_entry = {'name': function_name, 'children': function_data, 'text': function_name, 'faid': function_id}
+
+            # Add the function data to the name data
+            name_data.append(function_entry)
+
+        # Create the name data for the unit name
+        unit_name = unit_name.name
+        unit_entry = {'name': unit_name, 'children': name_data, 'text': unit_name, 'faid': unit_name}
+
+        # Add the name data to the unit data
+        unit_data.append(unit_entry)
+
+    return JsonResponse(unit_data, safe=False)
+
+
 
 
 def home(request):
@@ -252,10 +327,15 @@ def company_view(request):
 def function_view(request):
     return
 
-def asset_view(request, asset_id):
-    asset = Asset.objects.filter(id=asset_id)
+def asset_view(request, asset_id, node_id):
+    component = []
+    asset = Asset.objects.get(id=asset_id)
+    if(node_id != 0):
+        component = Component.objects.get(id=node_id)
+        unit = Unit.objects.get(component=component)
+        units = Unit.objects.filter(name=unit.name, function=unit.function, asset=unit.asset)
 
-    context = {'asset': asset}
+    context = {'asset': asset, 'units':units}
     return render(request, 'orgs/asset.html', context)
 
 def unit(request, node_id):

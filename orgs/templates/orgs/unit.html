@@ -2,8 +2,9 @@
 
 {% block content %}
 <a href="/" class="btn btn-outline-secondary btn-sm">&laquo; Back</a>
+<br><br>
 {% if unit.name %}
-    <h1>{{unit.name}} {{unit.component}}</h1>
+    <h5>{{unit.name}} / {{unit.function}} / {{unit.asset}} / {{unit.component}}</h5>
     <div class="card card-body">
         <table class="table table-sm">
             <tr>
@@ -79,29 +80,34 @@
         
           <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
           <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-        <script>
-          $(document).ready(function() {
-            $('#entryTable').DataTable({
-              //Pagination
-              "pagingType": "full_numbers",
-              columnDefs: [
-              {orderable: false, targets: 4},
-              {orderable: false, targets: 5},
-              {orderable: false, targets: 6},
-              ],
-
-              "stateSave": true,
-
-              //Search
-              "searching": true,
-              "searchDelay": 500,
-              "search": {
-                "regex": true,
-                "smart": true
-              }
+          <script>
+            $(document).ready(function() {
+                $.fn.dataTable.ext.order['dom-checkbox'] = function(settings, col) {
+                    return this.api().column(col, { order: 'index' }).nodes().map(function(td, i) {
+                        return $('input', td).prop('checked') ? '1' : '0';
+                    });
+                };
+        
+                $('#entryTable').DataTable({
+                    // Pagination
+                    "pagingType": "full_numbers",
+                    columnDefs: [
+                        { orderable: false, targets: [4, 5, 6, 7] },
+                        { type: 'dom-checkbox', targets: [1] } // Assuming the checkboxes are in the 7th column
+                    ],
+                    stateSave: true,
+        
+                    // Search
+                    searching: true,
+                    searchDelay: 500,
+                    search: {
+                        regex: true,
+                        smart: true
+                    }
+                });
             });
-          });
         </script>
+        
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
