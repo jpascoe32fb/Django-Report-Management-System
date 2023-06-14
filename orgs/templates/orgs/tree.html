@@ -27,9 +27,9 @@
 
   <div class="container-fluid">
     <div class="row">
-      <div class="col-12">
-        <div id="tree-container" class="card">
-          <div class="card-header">
+      <div>
+        <div id="tree-container" class="card" style="width: 15rem;">
+          <div class="card-header bg-danger">
             <h2 class="card-title">MDI</h2>
           </div>
           <div class="card-body">
@@ -145,10 +145,10 @@
         console.log(" 2");
       } else if (level == 3) {//asset
         console.log(" 3");
-        var node_id = 0;
-        if(node.original.comps) {node_id = node.original.comps[0].faid}
-        window.location = '/asset/' + node.original.faid + '/' + node_id;
-        window.history.pushState("", "", "/asset/" + node.original.faid);
+        //var node_id = 0;
+        //if(node.original.comps) {node_id = node.original.comps[0].faid}
+        window.location = '/asset/' + node.original.faid + '/';
+        window.history.pushState("", "", "/asset/" + node.original.faid + '/');
         //data.instance.deselect_node(node);
       } else {//component/unit
         console.log(level);
@@ -215,6 +215,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.11/jstree.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css"/>
+  <!--link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css"/-->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </html>

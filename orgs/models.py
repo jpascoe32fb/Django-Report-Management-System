@@ -70,10 +70,10 @@ class PlantTag(models.Model):
 
 class Unit(models.Model):
     name = models.ForeignKey(UnitName, null=True, on_delete=models.SET_NULL)
-    function = models.ForeignKey(Function, null=True, on_delete=models.SET_NULL)
-    asset = models.ForeignKey(Asset, null=True, on_delete=models.SET_NULL)
-    component = models.OneToOneField(Component, null=True, on_delete=models.SET_NULL)
-    plant_tag = models.ForeignKey(PlantTag, null=True, on_delete=models.SET_NULL)
+    function = models.ForeignKey(Function, null=True, blank=True, on_delete=models.SET_NULL)
+    asset = models.ForeignKey(Asset, null=True, blank=True, on_delete=models.SET_NULL)
+    component = models.OneToOneField(Component, null=True, blank=True, on_delete=models.SET_NULL)
+    plant_tag = models.ForeignKey(PlantTag, null=True, blank=True, on_delete=models.SET_NULL)
     #report = models.ForeignKey(Report, null=True, on_delete=models.SET_NULL)
     
     def __str__(self):
@@ -101,3 +101,10 @@ class Report(models.Model):
             return f"{self.unit.name.name}  {self.condition.entry_date}"
         except:
             return f"Dead"
+        
+def file_directory_path(instance, filename, report):
+    return 'uploads/user_{}/{}'.format(instance.user.id, report.unit.name)
+
+class Attachment(models.Model):
+    report_instance = models.ForeignKey(Report, on_delete=models.CASCADE)
+    file = models.FileField(upload_to= file_directory_path(report_instance), blank=True, null=True)
