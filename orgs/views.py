@@ -12,6 +12,8 @@ from collections import Counter
 import matplotlib.pyplot as plt
 from io import BytesIO
 import datetime
+import base64, re
+from django.core.files.base import ContentFile
 
 import json
 
@@ -415,6 +417,30 @@ def create_entry(request, node_id):
         new_report.save()
         new_report.fault_group.set(p_fault_list)
 
+        #attachments = request.FILES.getlist('attachments')
+        #for attachment in attachments:
+            #new_attachment = Attachment(file=attachment)
+            #new_attachment.report_instance = new_report
+            #new_attachment.save()
+            
+        #Process the attachments
+        attachments = request.FILES.getlist('attachments')
+        for attachment in attachments:
+            # If the attachment is a data URL, extract the base64 data
+            if attachment.content_type.startswith('data:image'):
+                match = re.match(r'data:image/(\w+);base64,(.*)', attachment.read().decode())
+                if match:
+                    format = match.group(1)
+                    data = match.group(2)
+                    file_data = base64.b63decode(data)
+                    attachment.file = ContentFile(file_data, name='attachment.' + format)
+                    new_attachment = Attachment(file=attachment)
+                    new_attachment.report_instance = new_report
+                    new_attachment.save()
+                    print("success")
+                    print(new_attachment.file.url)
+
+
         return JsonResponse({"data": ""}, status=200)
     
     faults_list = FaultGroup.objects.all()
@@ -494,10 +520,13 @@ def edit_entry(request, node_id, report_id):
     pre_entry_date = report.condition.entry_date.isoformat()
     pre_faults_list = report.fault_group
 
+    attachments = Attachment.objects.filter(report_instance=report)
+    #print(attachments)
+
 
     context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':node_id, 'severities':severities,
                 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list,
-                'pre_faults_list':list(pre_faults_list.values())}
+                'pre_faults_list':list(pre_faults_list.values()), 'attachments':attachments,}
     return render(request, 'orgs/edit_entry.html', context)
 
 def rename_node(request, node_id):

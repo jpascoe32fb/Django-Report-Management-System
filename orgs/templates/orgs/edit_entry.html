@@ -98,6 +98,7 @@
                   </div>
                 </div>
                 
+                <!--Edit Entry Fault table-->
                 <table class="table" id="faultTable" name="faultTable">
                   <thead>
                     <tr>
@@ -130,7 +131,7 @@
                       var clear = newRow.insertCell();
                       faultCell.innerHTML = fault;
                       faultGroupCell.innerHTML = faultGroup;
-                      clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='remove(this)'>X</button>";
+                      clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='removeRow(this)'>X</button>";
                     });
                   });
                 </script>
@@ -155,8 +156,20 @@
                   Closed?
                 </label>
               </div>
+              <br>
               <div class="form-group">
-                <label for="linkedDocs">Linked Documents:</label>
+                <label for="attachments">Attachments</label>
+                <input class="form-control" id="attachments" name="attachments" type="file" multiple>
+                <br>               
+                <div id="image-preview-container">
+                  {% for attachment in attachments %}
+                  <!--a href="{{ attachment.file.url }}" target="_blank">{{attachment.file.name}}</a-->
+                  <a href="{{ attachment.file.url }}" target="_blank">
+                    <img src="{{ attachment.file.url }}" alt="Attachment">                
+                  </a>
+                  <button type='button' class='btn btn-outline-secondary' onClick=''>X</button>
+                  {% endfor %}
+                </div>                 
               </div>
               <div class="form-group">
                 <label for="messages">Email SMS Details:</label>
@@ -169,6 +182,7 @@
     </div>
 
     <script>
+      
         function on_load() {
             var table = document.getElementById('faultTable');
             var pre_faults = {{ pre_faults_list|safe }};
@@ -182,8 +196,13 @@
                 clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='remove(this)'>X</button>";
             }
         }
-        function remove(row) {
+
+        function removeRow(row) {
             row.parentNode.parentNode.remove();
+        }
+
+        function remove_img(img) {
+
         }
         on_load();
     </script>

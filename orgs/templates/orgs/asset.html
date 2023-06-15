@@ -23,7 +23,11 @@
                     <td>{{unit.name}}</td>
                     <td>{{unit.function}}</td>
                     <td>{{unit.asset}}</td>
-                    <td><a href="/unit/{{unit.id}}">{{unit.component}}</a></td>
+                    {% if unit.component != None %}
+                        <td><a href="/unit/{{unit.id}}">{{unit.component}}</a></td>
+                    {% else %}
+                        <td>None</td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </table>

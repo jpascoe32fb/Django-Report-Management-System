@@ -102,9 +102,14 @@ class Report(models.Model):
         except:
             return f"Dead"
         
-def file_directory_path(instance, filename, report):
-    return 'uploads/user_{}/{}'.format(instance.user.id, report.unit.name)
 
 class Attachment(models.Model):
-    report_instance = models.ForeignKey(Report, on_delete=models.CASCADE)
-    file = models.FileField(upload_to= file_directory_path(report_instance), blank=True, null=True)
+    def file_directory_path(instance, filename):
+        return 'uploads/{}/{}/{}/{}/{}'.format(instance.report_instance.unit.name.name,
+                                            instance.report_instance.unit.function.name, 
+                                             instance.report_instance.unit.asset.name,
+                                             instance.report_instance.id, filename)
+    
+    id = models.AutoField(primary_key=True)
+    report_instance = models.ForeignKey(Report, blank=True, null=True, on_delete=models.CASCADE)
+    file = models.FileField(upload_to= file_directory_path, blank=True, null=True)
