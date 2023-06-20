@@ -84,8 +84,19 @@
                 "create": {
                   "label": "Create New",
                   "icon": 'bi bi-plus-square',
-                  "action": function() {
-                    createNode(node);
+                  "submenu": {
+                    "here": {
+                      "label": "Here",
+                      "action": function() {
+                        createNodeHere(node);
+                      }
+                    },
+                    "child": {
+                      "label": "Child",
+                      "action": function() {
+                        createNodeChild(node);
+                      }
+                    },
                   }
                 },
                 "delete": {
@@ -128,34 +139,118 @@
     return cookieValue;
   }
 
-  function createNode(node) {
-    var newNode = {
+  function createNodeHere(node) {
+    var level = node.parents.length;
+    //console.log(node);
 
+    // Open the Bootstrap modal for naming
+    $('#renameModal').modal('show');
+  
+    // Handle form submission
+    $('#renameForm').on('submit', function(event) {
+      event.preventDefault();
+      var newName = $('#newNameInput').val();
+  
+      // Send the Ajax POST request to update the node name
+      $.ajax({
+        url: '/create-here/' + node.original.uid + '/',
+        type: 'POST',
+        data: {
+          'new_name': newName,
+          'level': level,     
+        },
+        dataType: 'json',
+        beforeSend: function(xhr, settings) {
+          // Retrieve the CSRF token from the cookie
+          var csrfToken = getCookie('csrftoken');
+          // Set the CSRF token in the request header
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        },
+        success: function(response) {
+          // Handle the response from the server
+          // Close the Bootstrap modal
+          $('#renameModal').modal('hide');
+          $('#newNameInput').val('');
+          // Update the jstree node name
+          window.location.reload();
+          
+        },
+        error: function(response) {
+          // Handle the error response
+          // Show an error message or perform any other necessary actions
+          alert("Error Renaming Node!");
+          $('#newNameInput').val('');
+        }
+      });
+    }); 
+  }
+
+  function createNodeChild(node) {
+    var level = node.parents.length;
+    if(level > 3) {
+      alert("Can't create child at the end of the tree!");
+      return;
     }
+    //console.log(node);
+
+    // Open the Bootstrap modal for naming
+    $('#renameModal').modal('show');
+  
+    // Handle form submission
+    $('#renameForm').on('submit', function(event) {
+      event.preventDefault();
+      var newName = $('#newNameInput').val();
+  
+      // Send the Ajax POST request to update the node name
+      $.ajax({
+        url: '/create-child/' + node.original.uid + '/',
+        type: 'POST',
+        data: {
+          'new_name': newName,
+          'level': level,     
+        },
+        dataType: 'json',
+        beforeSend: function(xhr, settings) {
+          // Retrieve the CSRF token from the cookie
+          var csrfToken = getCookie('csrftoken');
+          // Set the CSRF token in the request header
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        },
+        success: function(response) {
+          // Handle the response from the server
+          // Close the Bootstrap modal
+          $('#renameModal').modal('hide');
+          $('#newNameInput').val('');
+          // Update the jstree node name
+          window.location.reload();
+          
+        },
+        error: function(response) {
+          // Handle the error response
+          // Show an error message or perform any other necessary actions
+          alert("Error Renaming Node!");
+          $('#newNameInput').val('');
+        }
+      });
+    });    
   }
 
   function enterNode(node) {
-    //console.log("Enter node");
-    console.log(node);
-      var level = node.parents.length;
+    var level = node.parents.length;
 
-      if(level == 1) {//company
-        console.log(" 1");
-      } else if (level == 2) {//function
-        console.log(" 2");
-      } else if (level == 3) {//asset
-        console.log(" 3");
-        //var node_id = 0;
-        //if(node.original.comps) {node_id = node.original.comps[0].faid}
-        window.location = '/asset/' + node.original.faid + '/';
-        window.history.pushState("", "", "/asset/" + node.original.faid + '/');
-        //data.instance.deselect_node(node);
-      } else {//component/unit
-        console.log(level);
-        window.location = '/unit/' + node.original.faid;
-        window.history.pushState("", "", "/unit/" + node.original.faid);
-        //data.instance.deselect_node(node);
-      }
+    if(level == 1) {//company
+      console.log(" 1");
+    } else if (level == 2) {//function
+      console.log(" 2");
+    } else if (level == 3) {//asset
+      console.log(" 3");
+      window.location = '/asset/' + node.original.faid + '/';
+      window.history.pushState("", "", "/asset/" + node.original.faid + '/');
+    } else {//component/unit
+      console.log(level);
+      window.location = '/unit/' + node.original.uid;
+      window.history.pushState("", "", "/unit/" + node.original.uid);
+    }
   }
 
   function renameNode(node) {
@@ -175,8 +270,7 @@
         type: 'POST',
         data: {
           'new_name': newName,
-          'level': level,
-      
+          'level': level,     
         },
         dataType: 'json',
         beforeSend: function(xhr, settings) {

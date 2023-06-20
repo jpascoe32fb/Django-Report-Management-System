@@ -1,5 +1,5 @@
 from django.db import models
-
+import os
 # Create your models here.
 
 class Severity(models.Model):
@@ -105,10 +105,13 @@ class Report(models.Model):
 
 class Attachment(models.Model):
     def file_directory_path(instance, filename):
-        return 'uploads/{}/{}/{}/{}/{}'.format(instance.report_instance.unit.name.name,
-                                            instance.report_instance.unit.function.name, 
-                                             instance.report_instance.unit.asset.name,
-                                             instance.report_instance.id, filename)
+        _, extension = os.path.splitext(filename)
+        return 'uploads/{}/{}/{}/{}/{}'.format(
+            instance.report_instance.unit.name.name,
+            instance.report_instance.unit.function.name, 
+            instance.report_instance.unit.asset.name,
+            instance.report_instance.id, filename
+            )
     
     id = models.AutoField(primary_key=True)
     report_instance = models.ForeignKey(Report, blank=True, null=True, on_delete=models.CASCADE)

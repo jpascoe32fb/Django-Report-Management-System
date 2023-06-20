@@ -16,6 +16,7 @@ import base64, re
 from django.core.files.base import ContentFile
 
 import json
+from django.core import serializers
 
 from .models import *
 
@@ -29,6 +30,59 @@ def safe_get(model, **kwargs):
         return None
 
 def get_unit_tree_data(request):
+    units = Unit.objects.all()
+    unit_data = []
+    processed_names = set()
+    #processed_functions = set()
+    #processed_assets = set()
+    #processed_components = set()
+    #processed_plant_tags = set()
+
+    for unit in units:
+        if unit.name not in processed_names:
+            processed_names.add(unit.name)
+            name_units = Unit.objects.filter(name=unit.name)
+            function_data = []
+            processed_functions = set()
+            for name_unit in name_units:
+                if name_unit.function == None:
+                    continue
+                if name_unit.function not in processed_functions:
+                    processed_functions.add(name_unit.function)
+                    function_units = Unit.objects.filter(name=unit.name, function=name_unit.function)
+                    asset_data = []
+                    processed_assets = set()
+                    for function_unit in function_units:
+                        if function_unit.asset == None:
+                            continue
+                        if function_unit.asset not in processed_assets:
+                            processed_assets.add(function_unit.asset)
+                            asset_units = Unit.objects.filter(name=unit.name, function=name_unit.function, asset=function_unit.asset)
+                            component_data = []
+                            processed_components = set()
+                            for asset_unit in asset_units:
+                                if asset_unit.component == None:
+                                    continue
+                                if asset_unit.component not in processed_components:
+                                    processed_components.add(asset_unit.component)
+                                    component_units = Unit.objects.filter(name=unit.name, function=name_unit.function, asset=function_unit.asset, component=asset_unit.component)
+                                    plant_tag_data = []
+                                    processed_plant_tags = set()
+                                    for component_unit in component_units:
+                                        if component_unit == None:
+                                            continue
+                                        if component_unit.plant_tag not in processed_plant_tags:
+                                            processed_plant_tags.add(component_unit.plant_tag)
+                                            #plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
+                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.component.id, 'uid': asset_unit.id})
+                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id, 'uid': function_unit.id})#may need to make function_unit.id
+                    function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id, 'uid': name_unit.id})
+            unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name, 'faid': unit.name.id, 'uid': unit.id})    
+    #print(unit_data)
+    return JsonResponse(unit_data, safe=False)
+
+
+def get_unit_tree_data2(request):
     units = UnitName.objects.all()
     unit_data = []
     processed_names = set()
@@ -73,49 +127,12 @@ def get_unit_tree_data(request):
                                         if component_unit.plant_tag not in processed_plant_tags:
                                             processed_plant_tags.add(component_unit.plant_tag)
                                             #plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
-                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.id})
-                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id})#may need to make function_unit.id
-                    function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id})
-            unit_data.append({'name': unit.name, 'children': function_data, 'text': unit.name, 'faid': unit.id})
-
-    return JsonResponse(unit_data, safe=False)
-
-
-def get_unit_tree_data2(request):
-    units = UnitName.objects.all()
-    unit_data = []
-
-    for unit in units:
-        name_units = Unit.objects.filter(name=unit)
-        function_data = []
-
-        for name_unit in name_units:
-            function_units = Unit.objects.filter(name=unit, function=name_unit.function)
-            asset_data = []
-
-            for function_unit in function_units:
-                asset_units = Unit.objects.filter(name=unit, function=name_unit.function, asset=function_unit.asset)
-                component_data = []
-
-                for asset_unit in asset_units:
-                    component_units = Unit.objects.filter(name=unit, function=name_unit.function, asset=function_unit.asset, component=asset_unit.component)
-                    plant_tag_data = []
-
-                    for component_unit in component_units:
-                        # Process plant tag data here
-                        plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
-
-                    if plant_tag_data:
-                        component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.component.id})
-
-                if component_data:
-                    asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id, 'comps': component_data})
-
-            if asset_data:
-                function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id})
-
-        if function_data:
-            unit_data.append({'name': unit.name, 'children': function_data, 'text': unit.name, 'faid': unit.id})
+                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.component.id, 'uid': asset_unit.id})
+                                    #print(asset_unit.id)
+                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id, 'uid': function_unit.id})#may need to make function_unit.id
+                    function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id, 'uid': name_unit.id})
+            print(unit.id)
+            unit_data.append({'name': unit.name, 'children': function_data, 'text': unit.name, 'faid': unit.id, 'uid': unit.id})
 
     return JsonResponse(unit_data, safe=False)
 
@@ -304,7 +321,7 @@ def company_view(request):
 def function_view(request):
     return
 
-def asset_view(request, asset_id):
+def asset_view(request, asset_id):   
     asset = Asset.objects.get(id=asset_id)
     units = Unit.objects.filter(asset=asset)
     unit = units[0]
@@ -417,28 +434,12 @@ def create_entry(request, node_id):
         new_report.save()
         new_report.fault_group.set(p_fault_list)
 
-        #attachments = request.FILES.getlist('attachments')
-        #for attachment in attachments:
-            #new_attachment = Attachment(file=attachment)
-            #new_attachment.report_instance = new_report
-            #new_attachment.save()
-            
-        #Process the attachments
         attachments = request.FILES.getlist('attachments')
+        print(attachments)
         for attachment in attachments:
-            # If the attachment is a data URL, extract the base64 data
-            if attachment.content_type.startswith('data:image'):
-                match = re.match(r'data:image/(\w+);base64,(.*)', attachment.read().decode())
-                if match:
-                    format = match.group(1)
-                    data = match.group(2)
-                    file_data = base64.b63decode(data)
-                    attachment.file = ContentFile(file_data, name='attachment.' + format)
-                    new_attachment = Attachment(file=attachment)
-                    new_attachment.report_instance = new_report
-                    new_attachment.save()
-                    print("success")
-                    print(new_attachment.file.url)
+            new_attachment = Attachment(file=attachment)
+            new_attachment.report_instance = new_report
+            new_attachment.save()
 
 
         return JsonResponse({"data": ""}, status=200)
@@ -521,12 +522,11 @@ def edit_entry(request, node_id, report_id):
     pre_faults_list = report.fault_group
 
     attachments = Attachment.objects.filter(report_instance=report)
-    #print(attachments)
-
+    attachments_list = serializers.serialize('json', attachments)
 
     context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':node_id, 'severities':severities,
                 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list,
-                'pre_faults_list':list(pre_faults_list.values()), 'attachments':attachments,}
+                'pre_faults_list':list(pre_faults_list.values()), 'attachments':attachments, 'attachments_list':attachments_list}
     return render(request, 'orgs/edit_entry.html', context)
 
 def rename_node(request, node_id):
@@ -536,8 +536,8 @@ def rename_node(request, node_id):
 
         if(level == "1"):
             #Company
-            unit = Unit.objects.get(id=node_id)
-            unit.name.name = newName
+            unit = UnitName.objects.get(id=node_id)
+            unit.name = newName
             unit.save()
         elif (level == "2"):
             #Function
@@ -551,13 +551,94 @@ def rename_node(request, node_id):
             asset.save()
         elif (level == "4"):
             #Component
-            unit = Unit.objects.get(id=node_id)
-            component = Component.objects.get(id=unit.component.id)
+            component = Component.objects.get(id=node_id)
             component.name = newName
             component.save()
-
         return JsonResponse({"data": ""}, status=200)
     
+    return JsonResponse({"data": ""}, status=400)
+
+def create_here_node(request, node_id):
+    if request.method == 'POST':
+        level = request.POST['level']
+        newName = request.POST['new_name']
+
+        if(level == "1"):
+            #Company
+            new_company = UnitName(name=newName)
+            new_company.save()
+
+            new_unit = Unit(name=new_company)
+            new_unit.save()
+        elif (level == "2"):
+            #Function
+            new_function = Function(name=newName)
+            new_function.save()
+            unit = Unit.objects.get(id=node_id)
+
+            new_unit = Unit(name=unit.name, function=new_function)
+            new_unit.save()
+        elif (level == "3"):
+            #Asset
+            new_asset = Asset(name=newName)
+            new_asset.save()
+            unit = Unit.objects.get(id=node_id)
+
+            new_unit = Unit(name=unit.name, function=unit.function, asset=new_asset)
+            new_unit.save()
+        elif (level == "4"):
+            #Component
+            new_component = Component(name=newName)
+            new_component.save()
+            unit = Unit.objects.get(id=node_id)
+
+            new_unit = Unit(name=unit.name, function=unit.function, asset=unit.asset, component=new_component)
+            new_unit.save()
+        return JsonResponse({"data": ""}, status=200)
+
+    return JsonResponse({"data": ""}, status=400)
+
+#recent_temp = Report.objects.filter(unit=unit).order_by('-condition__entry_date').first()
+def create_child_node(request, node_id):
+    if request.method == 'POST':
+        level = request.POST['level']
+        newName = request.POST['new_name']
+
+        if(level == "1"):
+            #Company -> Function
+            new_function = Function(name=newName)
+            new_function.save()
+            unit = Unit.objects.get(id=node_id)
+            if unit.function == None:
+                unit.function = new_function
+                unit.save()
+            else:
+                new_unit = Unit(name=unit.name, function=new_function)
+                new_unit.save()
+        elif (level == "2"):
+            #Function -> Asset
+            new_asset = Asset(name=newName)
+            new_asset.save()
+            unit = Unit.objects.get(id=node_id)
+            if unit.asset == None:
+                unit.asset = new_asset
+                unit.save()
+            else:
+                new_unit = Unit(name=unit.name, function=unit.function, asset=new_asset)
+                new_unit.save()
+        elif (level == "3"):
+            #Asset -> Component
+            new_component = Component(name=newName)
+            new_component.save()
+            unit = Unit.objects.get(id=node_id)
+            if unit.component == None:
+                unit.component = new_component
+                unit.save()
+            else:
+                new_unit = Unit(name=unit.name, function=unit.function, asset=unit.asset, component=new_component)
+                new_unit.save()
+        return JsonResponse({"data": ""}, status=200)
+
     return JsonResponse({"data": ""}, status=400)
 
 def remove_node(request, node_id):

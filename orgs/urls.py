@@ -16,6 +16,8 @@ urlpatterns = [
     path('create-entry/<int:node_id>/', views.create_entry, name='create_entry'),
     path('edit-entry/<int:node_id>/<int:report_id>/', views.edit_entry, name='edit_entry'),
     path('rename/<int:node_id>/', views.rename_node, name='rename'),
+    path('create-child/<int:node_id>/', views.create_child_node, name='create-child'),
+    path('create-here/<int:node_id>/', views.create_here_node, name='create-here'),
     path('about/', views.about),
     path('report/', views.report),
 ]

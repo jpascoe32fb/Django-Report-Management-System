@@ -182,29 +182,37 @@
     </div>
 
     <script>
-      
-        function on_load() {
-            var table = document.getElementById('faultTable');
-            var pre_faults = {{ pre_faults_list|safe }};
-            for(var i = 0; i < pre_faults.length; i++) {
-                var newRow = table.insertRow();
-                var faultCell = newRow.insertCell();
-                var faultGroupCell = newRow.insertCell();
-                var clear = newRow.insertCell();
-                faultCell.innerHTML = pre_faults[i]['fault'];
-                faultGroupCell.innerHTML = pre_faults[i]['fault_group'];
-                clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='remove(this)'>X</button>";
-            }
-        }
+      var selectedImages = [];
 
-        function removeRow(row) {
-            row.parentNode.parentNode.remove();
-        }
+      function on_load() {
+          var table = document.getElementById('faultTable');
+          var pre_faults = {{ pre_faults_list|safe }};
+          for(var i = 0; i < pre_faults.length; i++) {
+              var newRow = table.insertRow();
+              var faultCell = newRow.insertCell();
+              var faultGroupCell = newRow.insertCell();
+              var clear = newRow.insertCell();
+              faultCell.innerHTML = pre_faults[i]['fault'];
+              faultGroupCell.innerHTML = pre_faults[i]['fault_group'];
+              clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='removeRow(this)'>X</button>";
+          }
+          console.log("Pre");
+          var attachments = JSON.parse('{{ attachments_list|escapejs }}');
+          for(var i = 0; i < attachments.length; i++) {
+            selectedImages.push(attachments[i]);
+            //console.log(selectedImages[i]);
+          }
+          console.log("post");
+      }
 
-        function remove_img(img) {
+      function removeRow(row) {
+          row.parentNode.parentNode.remove();
+      }
 
-        }
-        on_load();
+      function remove_img(img) {
+
+      }
+      on_load();
     </script>
 
     <script>

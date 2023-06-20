@@ -212,12 +212,15 @@
           displayAttachment(imagePaste);
         }
 
-        for(var i = 0; i < imageUpload.length; i++) {
+        for (var i = 0; i < imageUpload.length; i++) {
           var reader = new FileReader();
-          reader.onload = function(e) {
-            selectedImages.push(e.target.result);
-            displayAttachment(e.target.result);
-          };
+          reader.onload = (function(file) {
+            return function(e) {
+              selectedImages.push(file);
+              
+              displayAttachment(e.target.result, file);
+            };
+          })(imageUpload[i]);
           reader.readAsDataURL(imageUpload[i]);
         }
 
@@ -230,7 +233,7 @@
       }
 
       // Function to display the image in the preview container
-      function displayAttachment(imageSrc) {
+      function displayAttachment(imageSrc, file) {
         var imagePreviewContainer = $('#image-preview-container');
         var imageElement = $('<div>').addClass('image-preview');
         var img = $('<img>').attr('src', imageSrc).addClass('preview-image');
@@ -240,8 +243,11 @@
 
         // Attach event listener to the remove button
         removeButton.on('click', function() {
-          removeAttachment(imageSrc, imageElement);
+          removeAttachment(file, imageElement);
         });
+
+        //imageElement.data('file', file.name);
+        //console.log(file);
       }
 
       function removeAttachment(imageSrc, imageElement) {
@@ -350,6 +356,7 @@
           var entryDate = $('#entryDate').val();
 
           //var attachments = $('#attachments')[0].files; // ************************************
+          var attachments = selectedImages;
 
           var faultsTable = document.getElementById('faultTable');
           var recommendation = $('#recommendations').val();
@@ -361,13 +368,15 @@
           formData.append('analysts', analyst);
           formData.append('severity', severity);
           formData.append('entryDate', entryDate);
-          selectedImages.forEach(function(imageSrc) {
+          
+          /*selectedImages.forEach(function(imageSrc) {
             var blob = dataURLtoBlob(imageSrc);
-            formData.append('attachments', blob);
-          });
-          /*for (var i = 0; i < attachments.length; i++) {
+            formData.append('attachments', imageSrc);
+          });*/
+
+          for (var i = 0; i < attachments.length; i++) {
             formData.append('attachments', attachments[i]);
-          }*/
+          }
           formData.append('recommendation', recommendation);
           formData.append('comment', comment);
         
