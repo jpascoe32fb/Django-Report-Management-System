@@ -32,11 +32,12 @@ class Condition(models.Model):
     technology = models.ForeignKey(Technology, null=True, on_delete=models.SET_NULL)
     analyst = models.ForeignKey(Analyst, null=True, on_delete=models.SET_NULL)
     entry_date = models.DateField(null=True)
+    data_collection_date = models.DateField(null=True)
     closed = models.BooleanField(null=True, default=False)
     close_date = models.DateField(null=True, blank=True)
-    work_req = models.CharField(max_length=300, null=True)
-    work_order = models.CharField(max_length=300, null=True)
-    reason = models.CharField(max_length=200, null=True, blank=True)
+    #work_req = models.CharField(max_length=300, null=True)
+    #work_order = models.CharField(max_length=300, null=True)
+    reason = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.severityLevel
@@ -44,21 +45,25 @@ class Condition(models.Model):
 
 class UnitName(models.Model):
     name = models.CharField(max_length=200, null=True)
+    description = models.TextField(null=True, blank=True)
     def __str__(self):
         return self.name
 
 class Function(models.Model):
     name = models.CharField(max_length=200, null=True)
+    description = models.TextField(null=True, blank=True)
     def __str__(self):
         return self.name
 
 class Asset(models.Model):
     name = models.CharField(max_length=200, null=True)
+    description = models.TextField(null=True, blank=True)
     def __str__(self):
         return self.name
 
 class Component(models.Model):
     name = models.CharField(max_length=200, null=True)
+    description = models.TextField(null=True, blank=True)
     def __str__(self):
         return self.name
 
@@ -81,7 +86,7 @@ class Unit(models.Model):
 
 class FaultGroup(models.Model):
     fault = models.CharField(max_length=200, null=True, blank=True)
-    fault_group = models.CharField(max_length=200, null=True, blank=True)
+    fault_group = models.CharField(max_length=250, null=True, blank=True)
 
     def __str__(self):
         return f"{self.fault}"
@@ -93,8 +98,8 @@ class Report(models.Model):
 
     fault = models.CharField(max_length=1000, null=True)
     fault_group = models.ManyToManyField(FaultGroup, blank=True)
-    comment = models.CharField(max_length=1000, null=True)
-    recommendation = models.CharField(max_length=1000, null=True)
+    comment = models.CharField(max_length=1200, null=True) #can be converted to textField(s)
+    recommendation = models.CharField(max_length=1200, null=True)
 
     def __str__(self):
         try:

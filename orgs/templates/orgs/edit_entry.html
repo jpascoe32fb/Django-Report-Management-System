@@ -1,7 +1,14 @@
 {% extends 'orgs/main.html' %}
 
 {% block content %}
-<a href="/unit/{{ unit_id }}" class="btn btn-outline-secondary btn-sm">&laquo; Back</a>
+<button type="button" id="back" class="btn btn-outline-secondary btn-sm">&laquo; Back</button>
+
+<script>
+    var backButton = $('#back');
+    backButton.on('click', function() {
+        window.history.back();
+      });
+</script>
 
     <!-- Create Report Form -->
     <div class="card-body" id="add-issue-modal" tabindex="-1" role="dialog" aria-labelledby="add-issue-modal-label" aria-hidden="true">
@@ -53,50 +60,6 @@
 
                 <label for="faults">Faults: </label>
                 <button class="btn btn-danger" id="listFaults" data-toggle="modal" data-target="#faultModal" type="button"> +</button>
-
-                <!-- Secondary Modal -->
-                <div class="modal fade" id="faultModal" tabindex="-1" role="dialog" aria-labelledby="secondaryModalLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="secondaryModalLabel">Fault Selection</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                      </div>
-                      <div class="modal-body">
-                        <!-- List of existing faults or option to create a new one -->
-                        <table id="entryTable" class="table table-sm">
-                          <thead>
-                            <tr>
-                              <th>Fault</th>
-                              <th>Fault Group</th>
-                              <th>Select</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for faults in faults_list %}
-                                <tr>
-                                  <td>{{faults.fault}}</td>
-                                  <td>{{faults.fault_group}}</td>
-                                  <td><button data-fault="{{faults.fault}}" data-fault-group="{{faults.fault_group}}" class="select-fault-group-btn btn btn-danger" data-dismiss="modal">+</button>
-                                </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                        <br>
-                        <p>Create New Fault:</p>
-                        <div>Fault</div>
-                        <input class="form-control" id="newFault" placeholder="Enter new fault">
-                        <div>Fault Group</div>
-                        <input class="form-control" id="newFaultGroup" placeholder="Enter new fault group"></input>
-                      </div>
-                      <div class="modal-footer">
-                        <button data-fault="" data-fault-group="" class="select-fault-group-btn btn btn-primary" data-dismiss="modal">Create New</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 
                 <!--Edit Entry Fault table-->
                 <table class="table" id="faultTable" name="faultTable">
@@ -108,33 +71,6 @@
                     </tr>
                   </thead>
                 </table>
-
-                <script>
-                  // JavaScript to handle the button click event and pass the selected fault_group back to the original page
-                  var selectFaultGroupButtons = document.querySelectorAll('.select-fault-group-btn');
-                  selectFaultGroupButtons.forEach(function(button) {
-                    button.addEventListener('click', function() {
-                      var fault = button.dataset.fault;
-                      var faultGroup = button.dataset.faultGroup;
-                      if(fault == "" && faultGroup == "") {
-                          fault = document.getElementById('newFault').value;
-                          faultGroup = document.getElementById('newFaultGroup').value;
-                      }
-
-                      // Pass the selected fault_group back to the original page
-                      // You can use AJAX or any other method to achieve this
-                      // Create a new row in the table with the selected fault and fault group
-                      var table = document.getElementById('faultTable');
-                      var newRow = table.insertRow();
-                      var faultCell = newRow.insertCell();
-                      var faultGroupCell = newRow.insertCell();
-                      var clear = newRow.insertCell();
-                      faultCell.innerHTML = fault;
-                      faultGroupCell.innerHTML = faultGroup;
-                      clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='removeRow(this)'>X</button>";
-                    });
-                  });
-                </script>
 
               </div>
               <div class="form-group">
@@ -181,6 +117,78 @@
       </div>
     </div>
 
+
+    <!-- Secondary Modal -->
+    <div class="modal fade" id="faultModal" tabindex="-1" role="dialog" aria-labelledby="secondaryModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="secondaryModalLabel">Fault Selection</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- List of existing faults or option to create a new one -->
+            <table id="entryTable" class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Fault</th>
+                  <th>Fault Group</th>
+                  <th>Select</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for faults in faults_list %}
+                    <tr>
+                      <td>{{faults.fault}}</td>
+                      <td>{{faults.fault_group}}</td>
+                      <td><button data-fault="{{faults.fault}}" data-fault-group="{{faults.fault_group}}" class="select-fault-group-btn btn btn-danger" data-dismiss="modal">+</button>
+                    </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <br>
+            <p>Create New Fault:</p>
+            <div>Fault</div>
+            <input class="form-control" id="newFault" placeholder="Enter new fault">
+            <div>Fault Group</div>
+            <input class="form-control" id="newFaultGroup" placeholder="Enter new fault group"></input>
+          </div>
+          <div class="modal-footer">
+            <button data-fault="" data-fault-group="" class="select-fault-group-btn btn btn-primary" data-dismiss="modal">Create New</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // JavaScript to handle the button click event and pass the selected fault_group back to the original page
+      var selectFaultGroupButtons = document.querySelectorAll('.select-fault-group-btn');
+      selectFaultGroupButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+          var fault = button.dataset.fault;
+          var faultGroup = button.dataset.faultGroup;
+          if(fault == "" && faultGroup == "") {
+              fault = document.getElementById('newFault').value;
+              faultGroup = document.getElementById('newFaultGroup').value;
+          }
+
+          // Pass the selected fault_group back to the original page
+          // You can use AJAX or any other method to achieve this
+          // Create a new row in the table with the selected fault and fault group
+          var table = document.getElementById('faultTable');
+          var newRow = table.insertRow();
+          var faultCell = newRow.insertCell();
+          var faultGroupCell = newRow.insertCell();
+          var clear = newRow.insertCell();
+          faultCell.innerHTML = fault;
+          faultGroupCell.innerHTML = faultGroup;
+          clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='removeRow(this)'>X</button>";
+        });
+      });
+    </script>
+
     <script>
       var selectedImages = [];
 
@@ -196,13 +204,14 @@
               faultGroupCell.innerHTML = pre_faults[i]['fault_group'];
               clear.innerHTML = "<button type='button' class='btn btn-outline-secondary' onClick='removeRow(this)'>X</button>";
           }
-          console.log("Pre");
+          //console.log("Pre");
           var attachments = JSON.parse('{{ attachments_list|escapejs }}');
           for(var i = 0; i < attachments.length; i++) {
             selectedImages.push(attachments[i]);
-            //console.log(selectedImages[i]);
+            displayAttachment(selectedImages[i].file, selectedImages[i].file)
+            console.log(selectedImages[i].file);
           }
-          console.log("post");
+          //console.log("post");
       }
 
       function removeRow(row) {
@@ -211,6 +220,63 @@
 
       function remove_img(img) {
 
+      }
+
+      function addAttachment() {
+        var imagePaste = $('#imagePaste').val();
+        var imageUpload = $('#imageUpload')[0].files;
+
+        if (imagePaste !== '') {
+          selectedImages.push(imagePaste);
+          displayAttachment(imagePaste);
+        }
+
+        for (var i = 0; i < imageUpload.length; i++) {
+          var reader = new FileReader();
+          reader.onload = (function(file) {
+            return function(e) {
+              selectedImages.push(file);
+              
+              displayAttachment(e.target.result, file);
+            };
+          })(imageUpload[i]);
+          reader.readAsDataURL(imageUpload[i]);
+        }
+
+        //Clear input fields
+        $('#imagePaste').val('');
+        $('#imageUpload').val('');
+
+        // Close the modal
+        //$('#attachmentModal').modal('hide');
+      }
+
+      // Function to display the image in the preview container
+      function displayAttachment(imageSrc, file) {
+        var imagePreviewContainer = $('#image-preview-container');
+        var imageElement = $('<div>').addClass('image-preview');
+        var img = $('<img>').attr('src', imageSrc).addClass('preview-image');
+        var removeButton = $('<button>').addClass('btn btn-outline-secondary remove-btn').text('X');
+        imageElement.append(img, removeButton);
+        imagePreviewContainer.append(imageElement);
+
+        // Attach event listener to the remove button
+        removeButton.on('click', function() {
+          removeAttachment(file, imageElement);
+        });
+
+        //imageElement.data('file', file.name);
+        //console.log(file);
+      }
+
+      function removeAttachment(imageSrc, imageElement) {
+        // Remove the image from the selected images array
+        var index = selectedImages.indexOf(imageSrc);
+        if (index > -1) {
+          selectedImages.splice(index, 1);
+        }
+        // Remove the image preview from the DOM
+        imageElement.remove();
       }
       on_load();
     </script>

@@ -14,10 +14,11 @@ urlpatterns = [
     path('generate-pdf/<str:report_ids>/', views.generate_pdf, name='generate_pdf'),
     path('detailed-condition/<int:report_id>/', views.detailed_condition, name='detailed_condition'),
     path('create-entry/<int:node_id>/', views.create_entry, name='create_entry'),
-    path('edit-entry/<int:node_id>/<int:report_id>/', views.edit_entry, name='edit_entry'),
+    path('edit-entry/<int:report_id>/', views.edit_entry, name='edit_entry'),
     path('rename/<int:node_id>/', views.rename_node, name='rename'),
     path('create-child/<int:node_id>/', views.create_child_node, name='create-child'),
     path('create-here/<int:node_id>/', views.create_here_node, name='create-here'),
+    path('move-node/', views.create_here_node, name='create-here'),
     path('about/', views.about),
     path('report/', views.report),
 ]

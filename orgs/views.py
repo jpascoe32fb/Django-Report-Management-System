@@ -74,10 +74,10 @@ def get_unit_tree_data(request):
                                         if component_unit.plant_tag not in processed_plant_tags:
                                             processed_plant_tags.add(component_unit.plant_tag)
                                             #plant_tag_data.append({'name': component_unit.plant_tag.name, 'text': component_unit.plant_tag.name})
-                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.component.id, 'uid': asset_unit.id})
-                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id, 'uid': function_unit.id})#may need to make function_unit.id
-                    function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id, 'uid': name_unit.id})
-            unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name, 'faid': unit.name.id, 'uid': unit.id})    
+                                    component_data.append({'name': asset_unit.component.name, 'children': plant_tag_data, 'text': asset_unit.component.name, 'faid': asset_unit.component.id, 'uid': asset_unit.id, 'type': "Component"})
+                            asset_data.append({'name': function_unit.asset.name, 'children': component_data, 'text': function_unit.asset.name, 'faid': function_unit.asset.id, 'uid': function_unit.id, 'type': "Asset"})#may need to make function_unit.id
+                    function_data.append({'name': name_unit.function.name, 'children': asset_data, 'text': name_unit.function.name, 'faid': name_unit.function.id, 'uid': name_unit.id, 'type': "Function"})
+            unit_data.append({'name': unit.name.name, 'children': function_data, 'text': unit.name.name, 'faid': unit.name.id, 'uid': unit.id, 'type': "Unit"})    
     #print(unit_data)
     return JsonResponse(unit_data, safe=False)
 
@@ -315,11 +315,19 @@ def detailed_condition(request, report_id):
     context = {'report': report}
     return render(request, 'orgs/detailed_condition.html', context)
 
-def company_view(request):
-    return
+def company_view(request, node_id):
+    unit_name = UnitName.objects.get(id=node_id)
+    units = Unit.objects.filter(name=unit_name)
+    open_reports = Report.objects.filter(unit__name=unit_name, condition__closed=False).order_by('-condition__entry_date')
 
-def function_view(request):
-    return
+    context = {'unit_name':unit_name, 'units':units, 'open_reports': open_reports}
+    return render(request, 'orgs/company.html', context)
+
+def function_view(request, node_id):
+
+
+    context = {}
+    return render(request, 'orgs/function.html', context)
 
 def asset_view(request, asset_id):   
     asset = Asset.objects.get(id=asset_id)
@@ -454,7 +462,7 @@ def create_entry(request, node_id):
                 'faults_list':faults_list}    
     return render(request, 'orgs/create_entry.html', context)
 
-def edit_entry(request, node_id, report_id):
+def edit_entry(request, report_id):
     if request.method == 'POST':
         techID = request.POST['technology']
         analystID = request.POST['analysts']
@@ -524,7 +532,7 @@ def edit_entry(request, node_id, report_id):
     attachments = Attachment.objects.filter(report_instance=report)
     attachments_list = serializers.serialize('json', attachments)
 
-    context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':node_id, 'severities':severities,
+    context = {'entry_date': pre_entry_date, 'report':report, 'unit_id':report.unit.id, 'severities':severities,
                 'analysts': analysts, 'technology': technologies, 'faults_list':faults_list,
                 'pre_faults_list':list(pre_faults_list.values()), 'attachments':attachments, 'attachments_list':attachments_list}
     return render(request, 'orgs/edit_entry.html', context)
@@ -533,46 +541,76 @@ def rename_node(request, node_id):
     if request.method == 'POST':
         level = request.POST['level']
         newName = request.POST['new_name']
+        newDesc = request.POST['new_desc']
 
         if(level == "1"):
             #Company
             unit = UnitName.objects.get(id=node_id)
             unit.name = newName
+            unit.description = newDesc
             unit.save()
         elif (level == "2"):
             #Function
             function = Function.objects.get(id=node_id)
             function.name = newName
+            function.description = newDesc
             function.save()
         elif (level == "3"):
             #Asset
             asset = Asset.objects.get(id=node_id)
             asset.name = newName
+            asset.description = newDesc
             asset.save()
         elif (level == "4"):
             #Component
             component = Component.objects.get(id=node_id)
             component.name = newName
+            component.description = newDesc
             component.save()
         return JsonResponse({"data": ""}, status=200)
-    
-    return JsonResponse({"data": ""}, status=400)
+    #GET requests
+    else:
+        level = request.GET['level']
+        name = ""
+        description = ""
+        if(level == "1"):
+            #Company
+            unit = UnitName.objects.get(id=node_id)
+            name = unit.name
+            description = unit.description
+        elif (level == "2"):
+            #Function
+            function = Function.objects.get(id=node_id)
+            name = function.name
+            description = function.description
+        elif (level == "3"):
+            #Asset
+            asset = Asset.objects.get(id=node_id)
+            name = asset.name
+            description = asset.description
+        elif (level == "4"):
+            #Component
+            component = Component.objects.get(id=node_id)
+            name = component.name
+            description = component.description
+        return JsonResponse({"name": name, "description": description}, status=200)
 
 def create_here_node(request, node_id):
     if request.method == 'POST':
         level = request.POST['level']
         newName = request.POST['new_name']
+        newDesc = request.POST['new_desc']
 
         if(level == "1"):
             #Company
-            new_company = UnitName(name=newName)
+            new_company = UnitName(name=newName, description=newDesc)
             new_company.save()
 
             new_unit = Unit(name=new_company)
             new_unit.save()
         elif (level == "2"):
             #Function
-            new_function = Function(name=newName)
+            new_function = Function(name=newName, description=newDesc)
             new_function.save()
             unit = Unit.objects.get(id=node_id)
 
@@ -580,7 +618,7 @@ def create_here_node(request, node_id):
             new_unit.save()
         elif (level == "3"):
             #Asset
-            new_asset = Asset(name=newName)
+            new_asset = Asset(name=newName, description=newDesc)
             new_asset.save()
             unit = Unit.objects.get(id=node_id)
 
@@ -588,7 +626,7 @@ def create_here_node(request, node_id):
             new_unit.save()
         elif (level == "4"):
             #Component
-            new_component = Component(name=newName)
+            new_component = Component(name=newName, description=newDesc)
             new_component.save()
             unit = Unit.objects.get(id=node_id)
 
@@ -598,15 +636,15 @@ def create_here_node(request, node_id):
 
     return JsonResponse({"data": ""}, status=400)
 
-#recent_temp = Report.objects.filter(unit=unit).order_by('-condition__entry_date').first()
 def create_child_node(request, node_id):
     if request.method == 'POST':
         level = request.POST['level']
         newName = request.POST['new_name']
+        newDesc = request.POST['new_desc']
 
         if(level == "1"):
             #Company -> Function
-            new_function = Function(name=newName)
+            new_function = Function(name=newName, description=newDesc)
             new_function.save()
             unit = Unit.objects.get(id=node_id)
             if unit.function == None:
@@ -617,7 +655,7 @@ def create_child_node(request, node_id):
                 new_unit.save()
         elif (level == "2"):
             #Function -> Asset
-            new_asset = Asset(name=newName)
+            new_asset = Asset(name=newName, description=newDesc)
             new_asset.save()
             unit = Unit.objects.get(id=node_id)
             if unit.asset == None:
@@ -628,7 +666,7 @@ def create_child_node(request, node_id):
                 new_unit.save()
         elif (level == "3"):
             #Asset -> Component
-            new_component = Component(name=newName)
+            new_component = Component(name=newName, description=newDesc)
             new_component.save()
             unit = Unit.objects.get(id=node_id)
             if unit.component == None:
@@ -642,6 +680,10 @@ def create_child_node(request, node_id):
     return JsonResponse({"data": ""}, status=400)
 
 def remove_node(request, node_id):
+
+    return JsonResponse({"data": ""}, status=400)
+
+def move_node(request):
 
     return JsonResponse({"data": ""}, status=400)
 
