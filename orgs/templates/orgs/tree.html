@@ -28,6 +28,47 @@
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Delete {{node.original.text}}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" id="deleteForm">
+            {% csrf_token %}
+            <p>Are you sure you want to delete this Node?</p>
+            <p>Everything below it in the hierarchy will also be deleted!</p>
+            <button type="submit" class="btn btn-primary">Confirm</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmModalLabel">Are You Sure?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" id="confirmForm">
+            {% csrf_token %}
+            <p>This will create a copy of the selected Node.</p>
+            <button type="submit" class="btn btn-primary">Confirm</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
   
 
   <div class="container-fluid">
@@ -50,6 +91,43 @@
   </div>
 
   <script>
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Store the expanded state of the tree nodes in sessionStorage
+// Store the expanded state of the tree nodes in sessionStorage
+function storeExpandedState() {
+  var tree = $('#jstree');
+  var state = tree.jstree('get_state', {
+    core: {
+      expanded: true
+    }
+  });
+  sessionStorage.setItem('treeState', JSON.stringify(state));
+}
+
+// Restore the expanded state of the tree nodes from sessionStorage
+function restoreExpandedState() {
+  var tree = $('#jstree');
+  var state = JSON.parse(sessionStorage.getItem('treeState'));
+  if (state) {
+    tree.jstree('set_state', state);
+  }
+}
+
+  //opened_node = []
   $(document).ready(function() {
     $.ajax({
       type: 'GET',
@@ -69,6 +147,24 @@
                 //}
                 var nodeType = node.type;
                 var parentType = node_parent.type;
+                //console.log(node_parent);
+                if(node_parent.state.opened == false && node_parent.type != "Component") {
+                  $('#jstree').jstree('open_node', node_parent);
+                  //opened_node.push(node_parent);
+                }
+                /*var isOpenedNode = true;
+                //if (opened_node) and node_parent != opened_node and node_parent != opened_node.children
+                //close opened_node and clear opened_node array
+                
+                if(opened_node.length > 0) {
+                  console.log(opened_node);
+                  isOpenedNode = opened_node[0].id === node_parent.id || node_parent.children.includes(opened_node[0].id);
+                  console.log(isOpenedNode);
+                }
+                if(!isOpenedNode) {
+                  $('#jstree').jstree('close_node', opened_node[0]);
+                  opened_node = [];
+                }*/
     
                 // Check if the move operation is allowed based on node types
                 if (nodeType === "Component" && parentType === "Asset") {
@@ -141,6 +237,12 @@
                     },
                   }
                 },
+                "create-copy": {
+                  "label": "Create Copy",
+                  "action": function() {
+                    createCopy(node);
+                  }
+                },
                 "delete": {
                   "label": "Delete",
                   "action": function() {
@@ -172,11 +274,45 @@
           },
         });
 
-        // Handles the moving of a node through dnd
+        // Handles the moving of a node through DND
         $('#jstree').on('move_node.jstree', function(event, data) {
-          console.log(data);
           var parent = $('#jstree').jstree('get_node', data.parent);
-          console.log(parent);
+          //console.log(data);
+
+          // Send the Ajax POST request to update the node name
+          $.ajax({
+            url: '/move-node/',
+            type: 'POST',
+            data: {
+              'type': data.node.original.type,
+              'node_uid': data.node.original.uid,
+              'parent_uid': parent.original.uid,
+                 
+            },
+            dataType: 'json',
+            beforeSend: function(xhr, settings) {
+              // Retrieve the CSRF token from the cookie
+              var csrfToken = getCookie('csrftoken');
+              // Set the CSRF token in the request header
+              xhr.setRequestHeader('X-CSRFToken', csrfToken);
+            },
+            success: function(response) {
+              // Handle the response from the server
+              $('#jstree').jstree('open_node', $('#jstree').jstree('get_node',data.old_parent));
+              
+              storeExpandedState();
+              window.location.reload();
+
+              
+            },
+            error: function(response) {
+              // Handle the error response
+              alert("Error Moving Node!");
+            }
+          });
+          $(document).ready(function() {
+            restoreExpandedState();
+          });
         });
 
        /* $('.tree-search-input').on('input', function() {
@@ -192,23 +328,12 @@
     });
   });
 
-  function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
-
   function createNodeHere(node) {
     var level = node.parents.length;
+    if (level == 1) {
+      alert('Go to the Admin Page to create a new Company!');
+      return;
+    }
     //console.log(node);
 
     // Open the Bootstrap modal for naming
@@ -249,7 +374,7 @@
         error: function(response) {
           // Handle the error response
           // Show an error message or perform any other necessary actions
-          alert("Error Renaming Node!");
+          alert("Error Modifying Node!");
           $('#newNameInput').val('');
           $('#newDescInput').val('');
         }
@@ -309,6 +434,43 @@
         }
       });
     });    
+  }
+
+  function createCopy(node) {
+    var level = node.parents.length;
+    if (level == 1) {
+      alert('Go to the Admin Page to create a new Company!');
+      return;
+    }
+
+    $('#confirmModal').modal('show');
+
+    $('#confirmModal').on('submit', function(event) {
+      event.preventDefault();
+
+      $.ajax({ 
+        url: '/create-copy/' + node.original.uid + '/',
+        type: 'POST',
+        data: {
+          'level': level,     
+        },
+        dataType: 'json',
+        beforeSend: function(xhr, settings) {
+          // Retrieve the CSRF token from the cookie
+          var csrfToken = getCookie('csrftoken');
+          // Set the CSRF token in the request header
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        },
+        success: function(response) {
+          //console.log(response);
+          alert("Copy has been made!");
+          window.location.reload();
+        },
+        error: function(response) {
+          alert("Error Copying Node!");
+        }
+      });
+    });
   }
 
   function enterNode(node) {
@@ -400,6 +562,54 @@
         }
       });
     });
+  }
+
+  function deleteNode(node) {
+    var level = node.parents.length;
+    if (level == 1) {
+      alert('Go to the Admin Page to delete a Company!');
+      return;
+    }
+    //console.log(node);
+
+    // Open the Bootstrap modal for naming
+    $('#deleteModal').modal('show');
+  
+    // Handle form submission
+    $('#deleteForm').on('submit', function(event) {
+      event.preventDefault();
+      
+      // Send the Ajax POST request to update the node name
+      $.ajax({
+        url: '/delete-here/' + node.original.uid + '/',
+        type: 'POST',
+        data: {
+          'level': level,     
+        },
+        dataType: 'json',
+        beforeSend: function(xhr, settings) {
+          // Retrieve the CSRF token from the cookie
+          var csrfToken = getCookie('csrftoken');
+          // Set the CSRF token in the request header
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        },
+        success: function(response) {
+          // Handle the response from the server
+          // Close the Bootstrap modal
+          $('#deleteModal').modal('hide');
+          // Update the jstree node name
+          window.location = '/';
+          window.history.pushState('', '', '/');
+          
+        },
+        error: function(response) {
+          // Handle the error response
+          // Show an error message or perform any other necessary actions
+          alert("Error Deleting Node!");
+        }
+      });
+    }); 
+
   }
   
   </script>

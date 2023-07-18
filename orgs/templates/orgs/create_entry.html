@@ -43,7 +43,12 @@
     </div>
 
     <div class="form-group mb-3 col-4">
-      <label for="entryDate">Entry Date:</label>
+      <label for="collectionDate">Data Collection Date:</label>
+      <input class="form-control" id="collectionDate" name="collectionDate" type="date" required>
+    </div>
+
+    <div class="form-group mb-3 col-4">
+      <label for="entryDate">Condition Entry Date:</label>
       <input class="form-control" id="entryDate" name="entryDate" type="date" required>
     </div>
 
@@ -291,6 +296,7 @@
         var analyst = $('#analysts').val();
         var severity = $('#severity').val();
         var entryDate = $('#entryDate').val();
+        var collectionDate = $('#collectionDate').val();
 
         //var attachments = $('#attachments')[0].files; // ************************************
         var attachments = selectedImages;
@@ -305,6 +311,7 @@
         formData.append('analysts', analyst);
         formData.append('severity', severity);
         formData.append('entryDate', entryDate);
+        formData.append('collectionDate', collectionDate);
         
         /*selectedImages.forEach(function(imageSrc) {
           var blob = dataURLtoBlob(imageSrc);
